@@ -3,6 +3,7 @@ import 'package:retrofit/retrofit.dart';
 import '../../features/auth/data/models/admin_auth_response.dart';
 import '../../features/auth/data/models/admin_login_request.dart';
 import '../../features/dashboard/data/models/dashboard_stats_model.dart';
+import '../../features/exercises/data/models/admin_exercise_model.dart';
 import '../../features/users/data/models/admin_user_model.dart';
 
 part 'admin_api_service.g.dart';
@@ -32,7 +33,7 @@ abstract class AdminApiService {
 
   // Exercises
   @GET('/api/v1/admin/exercises')
-  Future<dynamic> getExercises({
+  Future<ExercisesResponseModel> getExercises({
     @Query('page') int? page,
     @Query('limit') int? limit,
     @Query('search') String? search,
@@ -42,10 +43,10 @@ abstract class AdminApiService {
   });
 
   @POST('/api/v1/admin/exercises')
-  Future<dynamic> createExercise(@Body() Map<String, dynamic> body);
+  Future<ExerciseMutationResponseModel> createExercise(@Body() Map<String, dynamic> body);
 
   @PUT('/api/v1/admin/exercises/{id}')
-  Future<dynamic> updateExercise(
+  Future<ExerciseMutationResponseModel> updateExercise(
     @Path('id') String id,
     @Body() Map<String, dynamic> body,
   );

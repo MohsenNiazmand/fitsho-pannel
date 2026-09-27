@@ -136,7 +136,7 @@ class _AdminApiService implements AdminApiService {
   }
 
   @override
-  Future<dynamic> getExercises({
+  Future<ExercisesResponseModel> getExercises({
     int? page,
     int? limit,
     String? search,
@@ -156,7 +156,7 @@ class _AdminApiService implements AdminApiService {
     queryParameters.removeWhere((k, v) => v == null);
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<dynamic>(
+    final _options = _setStreamType<ExercisesResponseModel>(
       Options(method: 'GET', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -166,19 +166,27 @@ class _AdminApiService implements AdminApiService {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ExercisesResponseModel _value;
+    try {
+      _value = ExercisesResponseModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
     return _value;
   }
 
   @override
-  Future<dynamic> createExercise(Map<String, dynamic> body) async {
+  Future<ExerciseMutationResponseModel> createExercise(
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<dynamic>(
+    final _options = _setStreamType<ExerciseMutationResponseModel>(
       Options(method: 'POST', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -188,19 +196,28 @@ class _AdminApiService implements AdminApiService {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ExerciseMutationResponseModel _value;
+    try {
+      _value = ExerciseMutationResponseModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
     return _value;
   }
 
   @override
-  Future<dynamic> updateExercise(String id, Map<String, dynamic> body) async {
+  Future<ExerciseMutationResponseModel> updateExercise(
+    String id,
+    Map<String, dynamic> body,
+  ) async {
     final _extra = <String, dynamic>{};
     final queryParameters = <String, dynamic>{};
     final _headers = <String, dynamic>{};
     final _data = <String, dynamic>{};
     _data.addAll(body);
-    final _options = _setStreamType<dynamic>(
+    final _options = _setStreamType<ExerciseMutationResponseModel>(
       Options(method: 'PUT', headers: _headers, extra: _extra)
           .compose(
             _dio.options,
@@ -210,8 +227,14 @@ class _AdminApiService implements AdminApiService {
           )
           .copyWith(baseUrl: _combineBaseUrls(_dio.options.baseUrl, baseUrl)),
     );
-    final _result = await _dio.fetch(_options);
-    final _value = _result.data;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late ExerciseMutationResponseModel _value;
+    try {
+      _value = ExerciseMutationResponseModel.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
     return _value;
   }
 

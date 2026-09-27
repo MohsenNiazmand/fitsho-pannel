@@ -67,7 +67,7 @@
   - (اختیاری در MVP) صفحه `UserDetailsScreen` برای دیدن اطلاعات کامل یک کاربر خاص.
 - **Commit Message:** `feat(users): implement users management list`
 
-### Phase 5: Exercises Catalog Management
+### Phase 5: Exercises Catalog Management (✅ Done)
 **هدف:** امکان مدیریت دیتابیس حرکات از روی پنل ادمین.
 - **تسک‌ها:**
   - اضافه کردن CRUD کامل حرکات به `AdminApiService`.
