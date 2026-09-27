@@ -40,7 +40,7 @@
   - راه‌اندازی اولیه `GoRouter` برای مسیرهای داشبورد، کاربران و تمرینات.
 - **Commit Message:** `chore: setup project skeleton and responsive admin shell`
 
-### Phase 2: Core Network Layer & Authentication
+### Phase 2: Core Network Layer & Authentication (✅ Done)
 **هدف:** تنظیم کلاینت شبکه، Retrofit و ورود ادمین.
 - **تسک‌ها:**
   - ایجاد تنظیمات `Dio` به همراه Interceptor برای ارسال توکن ادمین (Token Auth).

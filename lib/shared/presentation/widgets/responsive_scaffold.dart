@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
+import '../../../features/auth/presentation/providers/auth_provider.dart';
 
-class ResponsiveScaffold extends StatelessWidget {
+class ResponsiveScaffold extends ConsumerWidget {
   const ResponsiveScaffold({
     super.key,
     required this.child,
@@ -33,7 +35,7 @@ class ResponsiveScaffold extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final selectedIndex = _calculateSelectedIndex();
 
     return LayoutBuilder(
@@ -44,7 +46,7 @@ class ResponsiveScaffold extends StatelessWidget {
           return Scaffold(
             body: Row(
               children: [
-                _buildSidebar(context, selectedIndex),
+                _buildSidebar(context, ref, selectedIndex),
                 const VerticalDivider(width: 1, thickness: 1, color: Color(0xFF334155)),
                 Expanded(child: child),
               ],
@@ -82,9 +84,10 @@ class ResponsiveScaffold extends StatelessWidget {
     );
   }
 
-  Widget _buildSidebar(BuildContext context, int selectedIndex) {
+  Widget _buildSidebar(BuildContext context, WidgetRef ref, int selectedIndex) {
+    final user = ref.watch(authNotifierProvider).adminUser;
     return Container(
-      width: 260,
+      width: 270,
       color: AppTheme.darkSurface,
       child: Column(
         children: [
@@ -171,17 +174,21 @@ class ResponsiveScaffold extends StatelessWidget {
                   child: Icon(Icons.admin_panel_settings_rounded, color: AppTheme.primaryColor),
                 ),
                 const SizedBox(width: 12),
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'مدیر سیستم',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        user?.name ?? 'مدیر سیستم',
+                        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                       Text(
-                        'ادمین کل',
-                        style: TextStyle(fontSize: 11, color: AppTheme.textSecondaryDark),
+                        user?.mobile ?? 'ادمین کل',
+                        style: const TextStyle(fontSize: 11, color: AppTheme.textSecondaryDark),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
@@ -189,8 +196,11 @@ class ResponsiveScaffold extends StatelessWidget {
                 IconButton(
                   icon: const Icon(Icons.logout_rounded, color: AppTheme.dangerColor, size: 20),
                   tooltip: 'خروج از حساب',
-                  onPressed: () {
-                    context.go('/login');
+                  onPressed: () async {
+                    await ref.read(authNotifierProvider.notifier).logout();
+                    if (context.mounted) {
+                      context.go('/login');
+                    }
                   },
                 ),
               ],
