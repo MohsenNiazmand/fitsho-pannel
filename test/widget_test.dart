@@ -6,6 +6,26 @@ import 'package:fitsho_pannel/features/auth/domain/entities/admin_user.dart';
 import 'package:fitsho_pannel/features/auth/presentation/providers/auth_provider.dart';
 import 'package:fitsho_pannel/main.dart';
 
+import 'package:fpdart/fpdart.dart';
+import 'package:fitsho_pannel/core/error/failures.dart';
+import 'package:fitsho_pannel/features/dashboard/domain/entities/dashboard_stats.dart';
+import 'package:fitsho_pannel/features/dashboard/domain/repositories/dashboard_repository.dart';
+import 'package:fitsho_pannel/features/dashboard/presentation/providers/dashboard_provider.dart';
+
+class _FakeDashboardRepository implements DashboardRepository {
+  @override
+  Future<Either<Failure, DashboardStats>> getStats() async {
+    return right(const DashboardStats(
+      totalUsers: 10,
+      totalWorkoutPlans: 5,
+      totalDietPlans: 3,
+      totalExercises: 20,
+      activeUsersToday: 2,
+      newUsersToday: 1,
+    ));
+  }
+}
+
 void main() {
   testWidgets('FitShoAdminApp smoke test and navigation rendering', (WidgetTester tester) async {
     tester.view.physicalSize = const Size(1000, 800);
@@ -20,16 +40,18 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
           authNotifierProvider.overrideWith((ref) => _FakeAuthNotifier(true)),
+          dashboardRepositoryProvider.overrideWithValue(_FakeDashboardRepository()),
         ],
         child: const FitShoAdminApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     // Verify sidebar title and dashboard item
     expect(find.text('فیت‌شو'), findsOneWidget);
-    expect(find.text('داشبورد'), findsOneWidget);
-    expect(find.text('صفحه داشبورد'), findsOneWidget);
+    expect(find.text('داشبورد'), findsWidgets);
+    expect(find.text('داشبورد تحلیلی و آماری'), findsOneWidget);
   });
 
   testWidgets('ResponsiveScaffold renders BottomNavigationBar on mobile', (WidgetTester tester) async {
@@ -45,11 +67,13 @@ void main() {
         overrides: [
           sharedPreferencesProvider.overrideWithValue(prefs),
           authNotifierProvider.overrideWith((ref) => _FakeAuthNotifier(true)),
+          dashboardRepositoryProvider.overrideWithValue(_FakeDashboardRepository()),
         ],
         child: const FitShoAdminApp(),
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
 
     expect(find.byType(NavigationBar), findsOneWidget);
   });

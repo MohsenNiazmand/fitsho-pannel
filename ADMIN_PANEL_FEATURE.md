@@ -49,7 +49,7 @@
   - پیاده‌سازی صفحه `LoginScreen` و مدیریت State آن در Riverpod (با در نظر گرفتن Guard برای GoRouter که اگر توکن نبود، ریدایرکت شود).
 - **Commit Message:** `feat(auth): implement admin login and dio network layer`
 
-### Phase 3: Dashboard Feature (MVP)
+### Phase 3: Dashboard Feature (MVP) (✅ Done)
 **هدف:** نمایش آمار کلی اپلیکیشن.
 - **تسک‌ها:**
   - ساخت Entity و Model برای `DashboardStats` (مثلاً totalUsers, totalWorkoutPlans, totalDietPlans).

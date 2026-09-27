@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
 import '../../features/auth/data/models/admin_auth_response.dart';
 import '../../features/auth/data/models/admin_login_request.dart';
+import '../../features/dashboard/data/models/dashboard_stats_model.dart';
 
 part 'admin_api_service.g.dart';
 
@@ -15,7 +16,7 @@ abstract class AdminApiService {
 
   // Dashboard
   @GET('/api/v1/admin/dashboard/stats')
-  Future<dynamic> getDashboardStats();
+  Future<DashboardStatsResponse> getDashboardStats();
 
   // Users
   @GET('/api/v1/admin/users')
