@@ -58,7 +58,7 @@
   - ایجاد صفحه `DashboardScreen` و نمایش داده‌ها به صورت کارت‌های آماری زیبا.
 - **Commit Message:** `feat(dashboard): implement dashboard analytics view`
 
-### Phase 4: Users Management Feature
+### Phase 4: Users Management Feature (✅ Done)
 **هدف:** مشاهده لیست کاربران و جستجو/فیلتر در آن‌ها.
 - **تسک‌ها:**
   - اضافه کردن API لیست کاربران به `AdminApiService`.

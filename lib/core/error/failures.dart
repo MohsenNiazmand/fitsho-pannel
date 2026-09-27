@@ -22,3 +22,11 @@ class AuthFailure extends Failure {
 class CacheFailure extends Failure {
   const CacheFailure([super.message = 'خطا در حافظه محلی']);
 }
+
+class NotFoundFailure extends Failure {
+  const NotFoundFailure([super.message = 'موردی یافت نشد']);
+}
+
+class ValidationFailure extends Failure {
+  const ValidationFailure([super.message = 'داده‌های ورودی نامعتبر است']);
+}
