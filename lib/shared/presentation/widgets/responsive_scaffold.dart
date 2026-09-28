@@ -17,6 +17,7 @@ class ResponsiveScaffold extends ConsumerWidget {
   int _calculateSelectedIndex() {
     if (currentLocation.startsWith('/users')) return 1;
     if (currentLocation.startsWith('/exercises')) return 2;
+    if (currentLocation.startsWith('/metadata')) return 3;
     return 0; // /dashboard
   }
 
@@ -30,6 +31,9 @@ class ResponsiveScaffold extends ConsumerWidget {
         break;
       case 2:
         context.go('/exercises');
+        break;
+      case 3:
+        context.go('/metadata');
         break;
     }
   }
@@ -76,6 +80,11 @@ class ResponsiveScaffold extends ConsumerWidget {
                 icon: Icon(Icons.fitness_center_outlined),
                 selectedIcon: Icon(Icons.fitness_center_rounded, color: AppTheme.primaryColor),
                 label: 'حرکات',
+              ),
+              NavigationDestination(
+                icon: Icon(Icons.category_outlined),
+                selectedIcon: Icon(Icons.category_rounded, color: AppTheme.primaryColor),
+                label: 'کاتالوگ',
               ),
             ],
           ),
@@ -161,6 +170,12 @@ class ResponsiveScaffold extends ConsumerWidget {
             title: 'بانک حرکات ورزشی',
             isSelected: selectedIndex == 2,
             onTap: () => _onDestinationSelected(context, 2),
+          ),
+          _SidebarItem(
+            icon: Icons.category_rounded,
+            title: 'کاتالوگ و متادیتا',
+            isSelected: selectedIndex == 3,
+            onTap: () => _onDestinationSelected(context, 3),
           ),
           const Spacer(),
           // Logout / User Info

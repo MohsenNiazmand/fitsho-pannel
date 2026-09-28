@@ -13,6 +13,7 @@ class AppTheme {
   static const Color textSecondaryDark = Color(0xFF94A3B8);
   static const Color dangerColor = Color(0xFFEF4444);
   static const Color warningColor = Color(0xFFF59E0B);
+  static const Color successColor = Color(0xFF10B981);
 
   static ThemeData get darkTheme {
     return ThemeData(

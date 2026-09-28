@@ -5,6 +5,7 @@ import '../../features/auth/presentation/providers/auth_provider.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/dashboard/presentation/screens/dashboard_screen.dart';
 import '../../features/exercises/presentation/screens/exercises_screen.dart';
+import '../../features/metadata/presentation/screens/metadata_screen.dart';
 import '../../features/users/presentation/screens/users_screen.dart';
 import '../../shared/presentation/widgets/responsive_scaffold.dart';
 
@@ -50,6 +51,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: '/exercises',
             builder: (context, state) => const ExercisesScreen(),
+          ),
+          GoRoute(
+            path: '/metadata',
+            builder: (context, state) => const MetadataScreen(),
           ),
         ],
       ),
