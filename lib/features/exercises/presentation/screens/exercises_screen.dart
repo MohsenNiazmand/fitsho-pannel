@@ -140,27 +140,30 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                   Row(
                                     children: [
                                       Expanded(
-                                        child: _buildField(
+                                        child: _buildDropdownField(
                                           label: 'دسته‌بندی *',
-                                          hint: 'strength, cardio...',
-                                          controller: categoryController,
+                                          value: categoryController.text.isEmpty ? 'strength' : categoryController.text,
+                                          items: const ['strength', 'cardio', 'flexibility'],
+                                          onChanged: (val) => categoryController.text = val ?? 'strength',
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
-                                        child: _buildField(
+                                        child: _buildDropdownField(
                                           label: 'عضله اصلی *',
-                                          hint: 'chest, back, legs...',
-                                          controller: muscleController,
+                                          value: muscleController.text.isEmpty ? 'chest' : muscleController.text,
+                                          items: const ['chest', 'back', 'legs', 'arms', 'shoulders', 'core', 'full_body'],
+                                          onChanged: (val) => muscleController.text = val ?? 'chest',
                                         ),
                                       ),
                                     ],
                                   ),
                                   const SizedBox(height: 14),
-                                  _buildField(
+                                  _buildDropdownField(
                                     label: 'الگوی حرکتی *',
-                                    hint: 'مثال: push, pull, squat...',
-                                    controller: patternController,
+                                    value: patternController.text.isEmpty ? 'push' : patternController.text,
+                                    items: const ['push', 'pull', 'squat', 'hinge', 'lunge', 'core', 'carry'],
+                                    onChanged: (val) => patternController.text = val ?? 'push',
                                   ),
                                   const SizedBox(height: 14),
                                   _buildField(
@@ -324,6 +327,44 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDropdownField({
+    required String label,
+    required String value,
+    required List<String> items,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textSecondaryDark,
+          ),
+        ),
+        const SizedBox(height: 6),
+        DropdownButtonFormField<String>(
+          value: items.contains(value) ? value : items.first,
+          items: items.map((item) {
+            return DropdownMenuItem(
+              value: item,
+              child: Text(item, style: const TextStyle(fontSize: 13)),
+            );
+          }).toList(),
+          onChanged: onChanged,
+          dropdownColor: AppTheme.darkCard,
+          style: const TextStyle(color: AppTheme.textPrimaryDark),
+          decoration: const InputDecoration(
+            isDense: true,
+            contentPadding: EdgeInsets.symmetric(horizontal: 14, vertical: 12),
           ),
         ),
       ],
