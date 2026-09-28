@@ -4,6 +4,7 @@ import '../../features/auth/data/models/admin_auth_response.dart';
 import '../../features/auth/data/models/admin_login_request.dart';
 import '../../features/dashboard/data/models/dashboard_stats_model.dart';
 import '../../features/exercises/data/models/admin_exercise_model.dart';
+import '../../features/metadata/data/models/metadata_item_model.dart';
 import '../../features/users/data/models/admin_user_model.dart';
 
 part 'admin_api_service.g.dart';
@@ -50,4 +51,32 @@ abstract class AdminApiService {
     @Path('id') String id,
     @Body() Map<String, dynamic> body,
   );
+
+  // Metadata
+  @GET('/api/v1/admin/metadata')
+  Future<MetadataListResponseModel> getMetadata({
+    @Query('type') String? type,
+    @Query('isActive') bool? isActive,
+    @Query('search') String? search,
+    @Query('page') int? page,
+    @Query('limit') int? limit,
+  });
+
+  @POST('/api/v1/admin/metadata')
+  Future<MetadataMutationResponseModel> createMetadata(@Body() Map<String, dynamic> body);
+
+  @PUT('/api/v1/admin/metadata/{id}')
+  Future<MetadataMutationResponseModel> updateMetadata(
+    @Path('id') String id,
+    @Body() Map<String, dynamic> body,
+  );
+
+  @DELETE('/api/v1/admin/metadata/{id}')
+  Future<MetadataActionResponseModel> deleteMetadata(@Path('id') String id);
+
+  @PATCH('/api/v1/admin/metadata/reorder')
+  Future<MetadataActionResponseModel> reorderMetadata(@Body() Map<String, dynamic> body);
+
+  @GET('/api/v1/metadata/version')
+  Future<MetadataVersionResponseModel> getMetadataVersion();
 }

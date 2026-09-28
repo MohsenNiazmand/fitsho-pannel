@@ -35,7 +35,7 @@ Admin Panel
 
 ## فازهای توسعه
 
-### Phase 6: Domain & Data Layer
+### Phase 6: Domain & Data Layer (✅ Done)
 **هدف:** پیاده‌سازی لایه‌های domain و data برای ارتباط با API متادیتا.
 
 **تسک‌ها:**
