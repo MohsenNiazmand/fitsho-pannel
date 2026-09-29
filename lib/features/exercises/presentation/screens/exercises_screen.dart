@@ -15,11 +15,81 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   static const List<Map<String, String>> _categories = [
-    {'label': 'همه', 'value': ''},
+    {'label': 'همه دسته‌ها', 'value': ''},
     {'label': 'قدرتی', 'value': 'strength'},
     {'label': 'هوازی', 'value': 'cardio'},
-    {'label': 'کششی', 'value': 'flexibility'},
+    {'label': 'انعطاف‌پذیری', 'value': 'flexibility'},
+    {'label': 'پویایی (Warm-up)', 'value': 'mobility'},
+    {'label': 'تعادلی', 'value': 'balance'},
+    {'label': 'پلیومتریک', 'value': 'plyometric'},
   ];
+
+  static const List<Map<String, String>> _locationsFilter = [
+    {'label': 'همه مکان‌ها', 'value': ''},
+    {'label': 'باشگاه', 'value': 'gym'},
+    {'label': 'خانه', 'value': 'home'},
+  ];
+
+  static const Map<String, String> _locationOptions = {
+    'gym': 'باشگاه ورزشی',
+    'home': 'خانه',
+  };
+
+  static const Map<String, String> _disciplineOptions = {
+    'bodybuilding': 'بدنسازی',
+    'fitness': 'فیتنس و تناسب اندام',
+    'corrective': 'حرکات اصلاحی',
+    'cardio': 'کاردیو و سلامت قلب',
+    'flexibility': 'انعطاف‌پذیری و تحرک‌پذیری',
+  };
+
+  static const Map<String, String> _levelOptions = {
+    'beginner': 'مبتدی',
+    'intermediate': 'متوسط',
+    'advanced': 'پیشرفته',
+    'elite': 'حرفه‌ای',
+  };
+
+  static const Map<String, String> _equipmentOptions = {
+    'none': 'بدون ابزار',
+    'bodyweight': 'وزن بدن',
+    'dumbbell': 'دمبل',
+    'barbell': 'هالتر',
+    'kettlebell': 'کتل‌بل',
+    'resistance_band': 'کش تمرینی',
+    'pull_up_bar': 'میله بارفیکس',
+    'bench': 'نیمکت',
+    'machine': 'دستگاه بدنسازی',
+    'cable': 'سیم‌کش',
+    'mat': 'مت ورزشی',
+    'treadmill': 'تردمیل',
+    'stationary_bike': 'دوچرخه ثابت',
+    'jump_rope': 'طناب زدن',
+  };
+
+  static const Map<String, String> _secondaryMuscleOptions = {
+    'chest': 'سینه',
+    'back': 'پشت',
+    'legs': 'پا',
+    'arms': 'بازو',
+    'shoulders': 'سرشانه',
+    'core': 'میان‌تنه و شکم',
+    'glutes': 'باسن',
+    'calves': 'ساق پا',
+    'full_body': 'تمام بدن',
+  };
+
+  static const Map<String, String> _contraindicationOptions = {
+    'knee': 'زانو',
+    'shoulder': 'شانه',
+    'lower_back': 'گودی کمر / کمر',
+    'upper_back': 'بالای کمر و کول',
+    'ankle': 'مچ پا',
+    'wrist': 'مچ دست',
+    'neck': 'گردن',
+    'hip': 'لگن و ران',
+    'elbow': 'آرنج',
+  };
 
   @override
   void dispose() {
@@ -48,6 +118,19 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     final cueController = TextEditingController(text: exercise?.cue ?? '');
     bool isActive = exercise?.isActive ?? true;
 
+    final selectedLocations =
+        List<String>.from(exercise?.locations ?? ['gym', 'home']);
+    final selectedDisciplines =
+        List<String>.from(exercise?.disciplines ?? ['bodybuilding', 'fitness']);
+    final selectedLevels =
+        List<String>.from(exercise?.levels ?? ['beginner', 'intermediate', 'advanced']);
+    final selectedEquipment =
+        List<String>.from(exercise?.equipment ?? ['bodyweight']);
+    final selectedSecondaryMuscles =
+        List<String>.from(exercise?.secondaryMuscles ?? []);
+    final selectedContraindications =
+        List<String>.from(exercise?.contraindications ?? []);
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -65,7 +148,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                   ),
                   child: ConstrainedBox(
                     constraints:
-                        const BoxConstraints(maxWidth: 580, maxHeight: 720),
+                        const BoxConstraints(maxWidth: 640, maxHeight: 780),
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Column(
@@ -82,7 +165,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     height: 40,
                                     decoration: BoxDecoration(
                                       color:
-                                          AppTheme.primaryColor.withOpacity(0.15),
+                                          AppTheme.primaryColor.withValues(alpha: 0.15),
                                       borderRadius: BorderRadius.circular(10),
                                     ),
                                     child: Icon(
@@ -141,19 +224,43 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     children: [
                                       Expanded(
                                         child: _buildDropdownField(
-                                          label: 'دسته‌بندی *',
-                                          value: categoryController.text.isEmpty ? 'strength' : categoryController.text,
-                                          items: const ['strength', 'cardio', 'flexibility'],
-                                          onChanged: (val) => categoryController.text = val ?? 'strength',
+                                          label: 'دسته‌بندی اصلی *',
+                                          value: categoryController.text.isEmpty
+                                              ? 'strength'
+                                              : categoryController.text,
+                                          items: const [
+                                            'strength',
+                                            'cardio',
+                                            'flexibility',
+                                            'mobility',
+                                            'balance',
+                                            'plyometric'
+                                          ],
+                                          onChanged: (val) => categoryController
+                                              .text = val ?? 'strength',
                                         ),
                                       ),
                                       const SizedBox(width: 12),
                                       Expanded(
                                         child: _buildDropdownField(
                                           label: 'عضله اصلی *',
-                                          value: muscleController.text.isEmpty ? 'chest' : muscleController.text,
-                                          items: const ['chest', 'back', 'legs', 'arms', 'shoulders', 'core', 'full_body'],
-                                          onChanged: (val) => muscleController.text = val ?? 'chest',
+                                          value: muscleController.text.isEmpty
+                                              ? 'chest'
+                                              : muscleController.text,
+                                          items: const [
+                                            'chest',
+                                            'back',
+                                            'legs',
+                                            'arms',
+                                            'shoulders',
+                                            'core',
+                                            'glutes',
+                                            'calves',
+                                            'full_body'
+                                          ],
+                                          onChanged: (val) =>
+                                              muscleController.text =
+                                                  val ?? 'chest',
                                         ),
                                       ),
                                     ],
@@ -161,11 +268,126 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                   const SizedBox(height: 14),
                                   _buildDropdownField(
                                     label: 'الگوی حرکتی *',
-                                    value: patternController.text.isEmpty ? 'push' : patternController.text,
-                                    items: const ['push', 'pull', 'squat', 'hinge', 'lunge', 'core', 'carry'],
-                                    onChanged: (val) => patternController.text = val ?? 'push',
+                                    value: patternController.text.isEmpty
+                                        ? 'push'
+                                        : patternController.text,
+                                    items: const [
+                                      'push',
+                                      'pull',
+                                      'squat',
+                                      'hinge',
+                                      'lunge',
+                                      'core',
+                                      'carry',
+                                      'rotation'
+                                    ],
+                                    onChanged: (val) => patternController.text =
+                                        val ?? 'push',
                                   ),
-                                  const SizedBox(height: 14),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Locations
+                                  _buildMultiSelectChips(
+                                    label: 'مکان‌های تمرینی مجاز *',
+                                    options: _locationOptions,
+                                    selectedValues: selectedLocations,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedLocations.add(key);
+                                        } else {
+                                          selectedLocations.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Disciplines (5 Canonical)
+                                  _buildMultiSelectChips(
+                                    label: 'رشته‌های ورزشی مرتبط (۵ رشته استاندارد) *',
+                                    options: _disciplineOptions,
+                                    selectedValues: selectedDisciplines,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedDisciplines.add(key);
+                                        } else {
+                                          selectedDisciplines.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Levels
+                                  _buildMultiSelectChips(
+                                    label: 'سطوح مهارت مجاز *',
+                                    options: _levelOptions,
+                                    selectedValues: selectedLevels,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedLevels.add(key);
+                                        } else {
+                                          selectedLevels.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Equipment
+                                  _buildMultiSelectChips(
+                                    label: 'تجهیزات و ابزار موردنیاز *',
+                                    options: _equipmentOptions,
+                                    selectedValues: selectedEquipment,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedEquipment.add(key);
+                                        } else {
+                                          selectedEquipment.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Secondary Muscles
+                                  _buildMultiSelectChips(
+                                    label: 'عضلات کمکی / ثانویه',
+                                    options: _secondaryMuscleOptions,
+                                    selectedValues: selectedSecondaryMuscles,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedSecondaryMuscles.add(key);
+                                        } else {
+                                          selectedSecondaryMuscles.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // Multi-select: Contraindications
+                                  _buildMultiSelectChips(
+                                    label: 'موارد منع مصرف و آسیب‌ها',
+                                    options: _contraindicationOptions,
+                                    selectedValues: selectedContraindications,
+                                    onSelected: (key, selected) {
+                                      setDialogState(() {
+                                        if (selected) {
+                                          selectedContraindications.add(key);
+                                        } else {
+                                          selectedContraindications.remove(key);
+                                        }
+                                      });
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
                                   _buildField(
                                     label: 'آدرس گیف تصویر (GIF URL)',
                                     hint: 'https://...',
@@ -194,7 +416,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                       ),
                                     ),
                                     value: isActive,
-                                    activeColor: AppTheme.primaryColor,
+                                    activeThumbColor: AppTheme.primaryColor,
                                     contentPadding: EdgeInsets.zero,
                                     onChanged: (val) {
                                       setDialogState(() {
@@ -230,6 +452,14 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                               patternController.text.trim(),
                                           'primaryMuscle':
                                               muscleController.text.trim(),
+                                          'secondaryMuscles':
+                                              selectedSecondaryMuscles,
+                                          'equipment': selectedEquipment,
+                                          'locations': selectedLocations,
+                                          'levels': selectedLevels,
+                                          'disciplines': selectedDisciplines,
+                                          'contraindications':
+                                              selectedContraindications,
                                           'gifUrl': gifUrlController.text
                                                   .trim()
                                                   .isNotEmpty
@@ -240,11 +470,13 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                                   .isNotEmpty
                                               ? videoUrlController.text.trim()
                                               : null,
-                                          'cue':
-                                              cueController.text.trim().isNotEmpty
-                                                  ? cueController.text.trim()
-                                                  : null,
+                                          'cue': cueController.text
+                                                  .trim()
+                                                  .isNotEmpty
+                                              ? cueController.text.trim()
+                                              : null,
                                           'isActive': isActive,
+                                          'isCustomized': true,
                                         };
 
                                         bool success = false;
@@ -293,6 +525,57 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     );
   }
 
+  Widget _buildMultiSelectChips({
+    required String label,
+    required Map<String, String> options,
+    required List<String> selectedValues,
+    required Function(String key, bool selected) onSelected,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.bold,
+            color: AppTheme.textSecondaryDark,
+          ),
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 6,
+          runSpacing: 6,
+          children: options.entries.map((entry) {
+            final isSelected = selectedValues.contains(entry.key);
+            return FilterChip(
+              label: Text(entry.value),
+              selected: isSelected,
+              selectedColor: AppTheme.primaryColor.withValues(alpha: 0.25),
+              checkmarkColor: AppTheme.primaryColor,
+              backgroundColor: AppTheme.darkCard,
+              labelStyle: TextStyle(
+                fontSize: 11,
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : AppTheme.textSecondaryDark,
+                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+              ),
+              side: BorderSide(
+                color: isSelected
+                    ? AppTheme.primaryColor
+                    : const Color(0xFF334155),
+              ),
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8)),
+              onSelected: (bool selected) => onSelected(entry.key, selected),
+            );
+          }).toList(),
+        ),
+      ],
+    );
+  }
+
   Widget _buildField({
     required String label,
     required String hint,
@@ -321,7 +604,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
           decoration: InputDecoration(
             hintText: hint,
             hintStyle: TextStyle(
-              color: AppTheme.textSecondaryDark.withOpacity(0.5),
+              color: AppTheme.textSecondaryDark.withValues(alpha: 0.5),
               fontSize: 13,
             ),
             isDense: true,
@@ -352,7 +635,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         ),
         const SizedBox(height: 6),
         DropdownButtonFormField<String>(
-          value: items.contains(value) ? value : items.first,
+          initialValue: items.contains(value) ? value : items.first,
           items: items.map((item) {
             return DropdownMenuItem(
               value: item,
@@ -443,10 +726,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withOpacity(0.15),
+                      color: AppTheme.primaryColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                          color: AppTheme.primaryColor.withOpacity(0.3)),
+                          color: AppTheme.primaryColor.withValues(alpha: 0.3)),
                     ),
                     child: Text(
                       '$total حرکت',
@@ -544,7 +827,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 child: FilterChip(
                   label: Text(cat['label']!),
                   selected: isSelected,
-                  selectedColor: AppTheme.primaryColor.withOpacity(0.2),
+                  selectedColor: AppTheme.primaryColor.withValues(alpha: 0.2),
                   checkmarkColor: AppTheme.primaryColor,
                   labelStyle: TextStyle(
                     fontSize: 12,
@@ -572,6 +855,61 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                 ),
               );
             }).toList(),
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Text(
+                  'مکان تمرین:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                ),
+              ),
+              ..._locationsFilter.map((loc) {
+                final isSelected =
+                    (state.selectedLocation ?? '') == loc['value'];
+                return Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: FilterChip(
+                    label: Text(loc['label']!),
+                    selected: isSelected,
+                    selectedColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                    checkmarkColor: AppTheme.accentColor,
+                    labelStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? AppTheme.accentColor
+                          : AppTheme.textSecondaryDark,
+                    ),
+                    backgroundColor: AppTheme.darkSurface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(
+                        color: isSelected
+                            ? AppTheme.accentColor
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                    onSelected: (_) {
+                      ref
+                          .read(exercisesNotifierProvider.notifier)
+                          .onLocationSelected(
+                              loc['value']!.isEmpty ? null : loc['value']);
+                    },
+                  ),
+                );
+              }),
+            ],
           ),
         ),
       ],
@@ -608,7 +946,9 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
       );
     }
 
-    if (state.exercises.isEmpty) {
+    final displayedExercises = state.filteredExercises;
+
+    if (displayedExercises.isEmpty) {
       return const Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -639,11 +979,11 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            mainAxisExtent: 165,
+            mainAxisExtent: 175,
           ),
-          itemCount: state.exercises.length,
+          itemCount: displayedExercises.length,
           itemBuilder: (context, index) {
-            final exercise = state.exercises[index];
+            final exercise = displayedExercises[index];
             return _ExerciseCard(
               exercise: exercise,
               onEdit: () => _openExerciseFormDialog(context, exercise),
@@ -699,6 +1039,25 @@ class _ExerciseCard extends StatelessWidget {
 
   final AdminExercise exercise;
   final VoidCallback onEdit;
+
+  Color _getCategoryColor(String category) {
+    switch (category) {
+      case 'strength':
+        return const Color(0xFFF59E0B);
+      case 'cardio':
+        return const Color(0xFFEF4444);
+      case 'flexibility':
+        return const Color(0xFF10B981);
+      case 'mobility':
+        return const Color(0xFF06B6D4);
+      case 'balance':
+        return const Color(0xFF8B5CF6);
+      case 'plyometric':
+        return const Color(0xFFEC4899);
+      default:
+        return AppTheme.primaryColor;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -765,7 +1124,7 @@ class _ExerciseCard extends StatelessWidget {
                     exercise.key,
                     style: TextStyle(
                       fontSize: 11,
-                      color: AppTheme.textSecondaryDark.withOpacity(0.8),
+                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.8),
                       fontFamily: 'monospace',
                     ),
                     maxLines: 1,
@@ -782,8 +1141,23 @@ class _ExerciseCard extends StatelessWidget {
                       ),
                       _buildChip(
                         exercise.category,
-                        const Color(0xFFF59E0B),
+                        _getCategoryColor(exercise.category),
                       ),
+                      if (exercise.isCustomized)
+                        _buildChip(
+                          'شخصی‌سازی',
+                          const Color(0xFF8B5CF6),
+                        ),
+                      if (exercise.cue != null && exercise.cue!.isNotEmpty)
+                        _buildChip(
+                          'نکته‌دار',
+                          const Color(0xFF06B6D4),
+                        ),
+                      if (exercise.videoUrl != null && exercise.videoUrl!.isNotEmpty)
+                        _buildChip(
+                          'ویدیو',
+                          const Color(0xFF10B981),
+                        ),
                       _buildChip(
                         exercise.isActive ? 'فعال' : 'غیرفعال',
                         exercise.isActive
@@ -805,7 +1179,7 @@ class _ExerciseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.12),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(

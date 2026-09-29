@@ -39,6 +39,7 @@ class ExercisesState {
     this.searchQuery = '',
     this.selectedCategory,
     this.selectedMuscle,
+    this.selectedLocation,
   });
 
   final bool isLoading;
@@ -51,6 +52,16 @@ class ExercisesState {
   final String searchQuery;
   final String? selectedCategory;
   final String? selectedMuscle;
+  final String? selectedLocation;
+
+  List<AdminExercise> get filteredExercises {
+    if (selectedLocation == null || selectedLocation!.isEmpty) {
+      return exercises;
+    }
+    return exercises
+        .where((e) => e.locations.contains(selectedLocation))
+        .toList();
+  }
 
   ExercisesState copyWith({
     bool? isLoading,
@@ -67,6 +78,8 @@ class ExercisesState {
     bool clearCategory = false,
     String? selectedMuscle,
     bool clearMuscle = false,
+    String? selectedLocation,
+    bool clearLocation = false,
   }) {
     return ExercisesState(
       isLoading: isLoading ?? this.isLoading,
@@ -79,6 +92,7 @@ class ExercisesState {
       searchQuery: searchQuery ?? this.searchQuery,
       selectedCategory: clearCategory ? null : (selectedCategory ?? this.selectedCategory),
       selectedMuscle: clearMuscle ? null : (selectedMuscle ?? this.selectedMuscle),
+      selectedLocation: clearLocation ? null : (selectedLocation ?? this.selectedLocation),
     );
   }
 }
@@ -153,6 +167,14 @@ class ExercisesNotifier extends StateNotifier<ExercisesState> {
       await fetchExercises(page: 1, category: '');
     } else {
       await fetchExercises(page: 1, category: category);
+    }
+  }
+
+  void onLocationSelected(String? location) {
+    if (state.selectedLocation == location) {
+      state = state.copyWith(clearLocation: true);
+    } else {
+      state = state.copyWith(selectedLocation: location);
     }
   }
 

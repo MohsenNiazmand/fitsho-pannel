@@ -45,6 +45,11 @@ class MockExerciseRepository implements ExerciseRepository {
             pattern: 'push',
             primaryMuscle: 'chest',
             gifUrl: 'https://example.com/bench.gif',
+            videoUrl: 'https://example.com/bench.mp4',
+            cue: 'کمر صاف باشد',
+            isCustomized: true,
+            locations: ['gym'],
+            disciplines: ['bodybuilding'],
             isActive: true,
           ),
           const AdminExercise(
@@ -55,6 +60,8 @@ class MockExerciseRepository implements ExerciseRepository {
             pattern: 'squat',
             primaryMuscle: 'legs',
             gifUrl: null,
+            locations: ['gym', 'home'],
+            disciplines: ['fitness'],
             isActive: true,
           ),
         ],
@@ -214,10 +221,14 @@ void main() {
       expect(find.text('barbell_bench_press'), findsOneWidget);
       expect(find.text('اسکات هالتر'), findsOneWidget);
       expect(find.text('افزودن حرکت جدید'), findsOneWidget);
+      // Badges
+      expect(find.text('شخصی‌سازی'), findsOneWidget);
+      expect(find.text('نکته‌دار'), findsOneWidget);
+      expect(find.text('ویدیو'), findsOneWidget);
     });
 
-    testWidgets('clicking Add Exercise button opens form dialog', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1200, 800);
+    testWidgets('clicking Add Exercise button opens form dialog with all multi-select chips', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -243,7 +254,60 @@ void main() {
 
       expect(find.text('نام حرکت (فارسی) *'), findsOneWidget);
       expect(find.text('کلید یکتا (انگلیسی) *'), findsOneWidget);
+      expect(find.text('مکان‌های تمرینی مجاز *'), findsOneWidget);
+      expect(find.text('رشته‌های ورزشی مرتبط (۵ رشته استاندارد) *'), findsOneWidget);
+      expect(find.text('سطوح مهارت مجاز *'), findsOneWidget);
+      expect(find.text('تجهیزات و ابزار موردنیاز *'), findsOneWidget);
       expect(find.text('انصراف'), findsOneWidget);
+
+      // Submit dialog and verify isCustomized: true is sent
+      final textFields = find.descendant(of: find.byType(Dialog), matching: find.byType(TextField));
+      await tester.enterText(textFields.at(0), 'حرکت جدید');
+      await tester.enterText(textFields.at(1), 'new_exercise_key');
+      await tester.pump();
+
+      final submitBtn = find.text('افزودن حرکت');
+      await tester.tap(submitBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(mockRepo.lastCreatedData, isNotNull);
+      expect(mockRepo.lastCreatedData!['key'], 'new_exercise_key');
+      expect(mockRepo.lastCreatedData!['isCustomized'], true);
+    });
+
+    testWidgets('filtering by location shows matching exercises', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockExerciseRepository();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            exerciseRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: const MaterialApp(
+            home: ExercisesScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Both exercises are shown initially
+      expect(find.text('پرس سینه هالتر'), findsOneWidget);
+      expect(find.text('اسکات هالتر'), findsOneWidget);
+
+      // Tap on 'خانه' chip (only squat has 'home')
+      final homeChip = find.text('خانه');
+      await tester.tap(homeChip);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('پرس سینه هالتر'), findsNothing);
+      expect(find.text('اسکات هالتر'), findsOneWidget);
     });
   });
 }
