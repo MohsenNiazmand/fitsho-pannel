@@ -11,4 +11,10 @@ abstract class UsersRepository {
   });
 
   Future<Either<Failure, AdminUserDetails>> getUserDetails(String id);
+
+  Future<Either<Failure, AdminUserDetails>> resetUserQuotas(
+    String id, {
+    String target = 'all',
+  });
 }
+

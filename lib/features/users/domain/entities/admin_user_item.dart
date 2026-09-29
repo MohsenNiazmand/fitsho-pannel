@@ -1,3 +1,5 @@
+import 'user_quotas.dart';
+
 class AdminUserItem {
   const AdminUserItem({
     required this.id,
@@ -7,6 +9,7 @@ class AdminUserItem {
     required this.createdAt,
     this.workoutPlansCount = 0,
     this.dietPlansCount = 0,
+    this.quotas,
   });
 
   final String id;
@@ -16,7 +19,9 @@ class AdminUserItem {
   final DateTime createdAt;
   final int workoutPlansCount;
   final int dietPlansCount;
+  final UserQuotas? quotas;
 }
+
 
 class UserPagination {
   const UserPagination({

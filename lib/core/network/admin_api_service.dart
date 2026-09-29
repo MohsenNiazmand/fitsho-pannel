@@ -32,6 +32,13 @@ abstract class AdminApiService {
   @GET('/api/v1/admin/users/{id}')
   Future<UserDetailsResponseModel> getUserById(@Path('id') String id);
 
+  @POST('/api/v1/admin/users/{id}/reset-quotas')
+  Future<UserDetailsResponseModel> resetUserQuotas(
+    @Path('id') String id,
+    @Body() Map<String, dynamic> body,
+  );
+
+
   // Exercises
   @GET('/api/v1/admin/exercises')
   Future<ExercisesResponseModel> getExercises({

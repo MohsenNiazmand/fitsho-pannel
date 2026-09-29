@@ -8,7 +8,9 @@ import 'package:fitsho_pannel/features/users/domain/entities/admin_user_item.dar
 import 'package:fitsho_pannel/features/users/domain/repositories/users_repository.dart';
 import 'package:fitsho_pannel/features/users/domain/usecases/get_user_details_usecase.dart';
 import 'package:fitsho_pannel/features/users/domain/usecases/get_users_usecase.dart';
+import 'package:fitsho_pannel/features/users/domain/usecases/reset_user_quotas_usecase.dart';
 import 'package:fitsho_pannel/features/users/presentation/providers/users_provider.dart';
+
 import 'package:fitsho_pannel/features/users/presentation/screens/users_screen.dart';
 
 class MockUsersRepository implements UsersRepository {
@@ -86,7 +88,19 @@ class MockUsersRepository implements UsersRepository {
       ),
     );
   }
+
+  @override
+  Future<Either<Failure, AdminUserDetails>> resetUserQuotas(
+    String id, {
+    String target = 'all',
+  }) async {
+    if (!shouldSucceed) {
+      return left(const ServerFailure('خطا در ریست سهمیه‌های کاربر'));
+    }
+    return getUserDetails(id);
+  }
 }
+
 
 void main() {
   group('Users Domain & UseCases', () {
@@ -139,7 +153,23 @@ void main() {
         },
       );
     });
+
+    test('ResetUserQuotasUseCase resets quotas successfully', () async {
+      final mockRepo = MockUsersRepository();
+      final useCase = ResetUserQuotasUseCase(mockRepo);
+
+      final result = await useCase.execute('u-1', target: 'all');
+
+      expect(result.isRight(), true);
+      result.fold(
+        (_) => fail('should succeed'),
+        (details) {
+          expect(details.id, 'u-1');
+        },
+      );
+    });
   });
+
 
   group('UsersScreen Widget Tests', () {
     testWidgets('renders users list, search input, and table items', (WidgetTester tester) async {

@@ -1,8 +1,69 @@
 import 'package:json_annotation/json_annotation.dart';
 import 'package:fitsho_pannel/features/users/domain/entities/admin_user_details.dart';
 import 'package:fitsho_pannel/features/users/domain/entities/admin_user_item.dart';
+import 'package:fitsho_pannel/features/users/domain/entities/user_quotas.dart';
 
 part 'admin_user_model.g.dart';
+
+@JsonSerializable()
+class QuotaItemModel {
+  const QuotaItemModel({
+    this.used = 0,
+    this.max = 3,
+    this.remaining = 3,
+    this.swapsUsed = 0,
+    this.swapsMax = 5,
+    this.swapsRemaining = 5,
+    this.lastGeneratedAt,
+    this.lastSwappedAt,
+  });
+
+  factory QuotaItemModel.fromJson(Map<String, dynamic> json) =>
+      _$QuotaItemModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$QuotaItemModelToJson(this);
+
+  final int used;
+  final int max;
+  final int remaining;
+  final int swapsUsed;
+  final int swapsMax;
+  final int swapsRemaining;
+  final String? lastGeneratedAt;
+  final String? lastSwappedAt;
+
+  QuotaItem toEntity() => QuotaItem(
+        used: used,
+        max: max,
+        remaining: remaining,
+        swapsUsed: swapsUsed,
+        swapsMax: swapsMax,
+        swapsRemaining: swapsRemaining,
+        lastGeneratedAt: lastGeneratedAt,
+        lastSwappedAt: lastSwappedAt,
+      );
+}
+
+@JsonSerializable()
+class UserQuotasModel {
+  const UserQuotasModel({
+    required this.diet,
+    required this.workout,
+  });
+
+  factory UserQuotasModel.fromJson(Map<String, dynamic> json) =>
+      _$UserQuotasModelFromJson(json);
+
+  Map<String, dynamic> toJson() => _$UserQuotasModelToJson(this);
+
+  final QuotaItemModel diet;
+  final QuotaItemModel workout;
+
+  UserQuotas toEntity() => UserQuotas(
+        diet: diet.toEntity(),
+        workout: workout.toEntity(),
+      );
+}
 
 @JsonSerializable()
 class AdminUserCountModel {
@@ -29,6 +90,7 @@ class AdminUserModel {
     this.role = 'USER',
     required this.createdAt,
     this.count,
+    this.quotas,
   });
 
   factory AdminUserModel.fromJson(Map<String, dynamic> json) =>
@@ -43,6 +105,7 @@ class AdminUserModel {
   final String createdAt;
   @JsonKey(name: '_count')
   final AdminUserCountModel? count;
+  final UserQuotasModel? quotas;
 
   AdminUserItem toEntity() {
     return AdminUserItem(
@@ -53,9 +116,11 @@ class AdminUserModel {
       createdAt: DateTime.tryParse(createdAt) ?? DateTime.now(),
       workoutPlansCount: count?.workoutPlans ?? 0,
       dietPlansCount: count?.dietPlans ?? 0,
+      quotas: quotas?.toEntity(),
     );
   }
 }
+
 
 @JsonSerializable()
 class UserPaginationModel {
@@ -137,6 +202,7 @@ class UserDetailsDataModel {
     this.workoutProfile,
     this.workoutPlans,
     this.dietPlans,
+    this.quotas,
   });
 
   factory UserDetailsDataModel.fromJson(Map<String, dynamic> json) =>
@@ -153,6 +219,7 @@ class UserDetailsDataModel {
   final Map<String, dynamic>? workoutProfile;
   final List<dynamic>? workoutPlans;
   final List<dynamic>? dietPlans;
+  final UserQuotasModel? quotas;
 
   AdminUserDetails toEntity() {
     return AdminUserDetails(
@@ -165,9 +232,11 @@ class UserDetailsDataModel {
       workoutProfile: workoutProfile,
       workoutPlansCount: workoutPlans?.length ?? 0,
       dietPlansCount: dietPlans?.length ?? 0,
+      quotas: quotas?.toEntity(),
     );
   }
 }
+
 
 @JsonSerializable()
 class UserDetailsResponseModel {

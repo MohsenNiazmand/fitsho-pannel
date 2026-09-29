@@ -6,6 +6,7 @@ import 'package:fitsho_pannel/features/users/domain/entities/admin_user_item.dar
 import 'package:fitsho_pannel/features/users/domain/repositories/users_repository.dart';
 import 'package:fitsho_pannel/features/users/domain/usecases/get_user_details_usecase.dart';
 import 'package:fitsho_pannel/features/users/domain/usecases/get_users_usecase.dart';
+import 'package:fitsho_pannel/features/users/domain/usecases/reset_user_quotas_usecase.dart';
 
 final usersRepositoryProvider = Provider<UsersRepository>((ref) {
   final apiService = ref.watch(adminApiServiceProvider);
@@ -22,6 +23,11 @@ final getUserDetailsUseCaseProvider = Provider<GetUserDetailsUseCase>((ref) {
   return GetUserDetailsUseCase(repository);
 });
 
+final resetUserQuotasUseCaseProvider = Provider<ResetUserQuotasUseCase>((ref) {
+  final repository = ref.watch(usersRepositoryProvider);
+  return ResetUserQuotasUseCase(repository);
+});
+
 class UsersState {
   const UsersState({
     this.isLoading = false,
@@ -33,6 +39,8 @@ class UsersState {
     this.selectedUserDetails,
     this.isLoadingDetails = false,
     this.detailsError,
+    this.isResettingQuotas = false,
+    this.resetQuotaError,
   });
 
   final bool isLoading;
@@ -44,6 +52,8 @@ class UsersState {
   final AdminUserDetails? selectedUserDetails;
   final bool isLoadingDetails;
   final String? detailsError;
+  final bool isResettingQuotas;
+  final String? resetQuotaError;
 
   UsersState copyWith({
     bool? isLoading,
@@ -58,6 +68,9 @@ class UsersState {
     bool? isLoadingDetails,
     String? detailsError,
     bool clearDetailsError = false,
+    bool? isResettingQuotas,
+    String? resetQuotaError,
+    bool clearResetQuotaError = false,
   }) {
     return UsersState(
       isLoading: isLoading ?? this.isLoading,
@@ -72,18 +85,26 @@ class UsersState {
       isLoadingDetails: isLoadingDetails ?? this.isLoadingDetails,
       detailsError:
           clearDetailsError ? null : (detailsError ?? this.detailsError),
+      isResettingQuotas: isResettingQuotas ?? this.isResettingQuotas,
+      resetQuotaError: clearResetQuotaError
+          ? null
+          : (resetQuotaError ?? this.resetQuotaError),
     );
   }
 }
 
 class UsersNotifier extends StateNotifier<UsersState> {
-  UsersNotifier(this._getUsersUseCase, this._getUserDetailsUseCase)
-      : super(const UsersState()) {
+  UsersNotifier(
+    this._getUsersUseCase,
+    this._getUserDetailsUseCase,
+    this._resetUserQuotasUseCase,
+  ) : super(const UsersState()) {
     fetchUsers();
   }
 
   final GetUsersUseCase _getUsersUseCase;
   final GetUserDetailsUseCase _getUserDetailsUseCase;
+  final ResetUserQuotasUseCase _resetUserQuotasUseCase;
 
   Future<void> fetchUsers({int? page, String? search}) async {
     final targetPage = page ?? state.currentPage;
@@ -162,6 +183,49 @@ class UsersNotifier extends StateNotifier<UsersState> {
     );
   }
 
+  Future<bool> resetUserQuotas(String id, {String target = 'all'}) async {
+    state = state.copyWith(
+      isResettingQuotas: true,
+      clearResetQuotaError: true,
+    );
+
+    final result = await _resetUserQuotasUseCase.execute(id, target: target);
+
+    return result.fold(
+      (failure) {
+        state = state.copyWith(
+          isResettingQuotas: false,
+          resetQuotaError: failure.message,
+        );
+        return false;
+      },
+      (details) {
+        final updatedUsers = state.users.map((u) {
+          if (u.id == id) {
+            return AdminUserItem(
+              id: u.id,
+              mobile: u.mobile,
+              name: u.name,
+              role: u.role,
+              createdAt: u.createdAt,
+              workoutPlansCount: u.workoutPlansCount,
+              dietPlansCount: u.dietPlansCount,
+              quotas: details.quotas,
+            );
+          }
+          return u;
+        }).toList();
+
+        state = state.copyWith(
+          isResettingQuotas: false,
+          selectedUserDetails: details,
+          users: updatedUsers,
+        );
+        return true;
+      },
+    );
+  }
+
   void clearSelectedUser() {
     state = state.copyWith(clearSelectedDetails: true, clearDetailsError: true);
   }
@@ -171,5 +235,7 @@ final usersNotifierProvider =
     StateNotifierProvider<UsersNotifier, UsersState>((ref) {
   final getUsers = ref.watch(getUsersUseCaseProvider);
   final getUserDetails = ref.watch(getUserDetailsUseCaseProvider);
-  return UsersNotifier(getUsers, getUserDetails);
+  final resetUserQuotas = ref.watch(resetUserQuotasUseCaseProvider);
+  return UsersNotifier(getUsers, getUserDetails, resetUserQuotas);
 });
+

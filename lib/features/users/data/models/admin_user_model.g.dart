@@ -6,6 +6,42 @@ part of 'admin_user_model.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
+QuotaItemModel _$QuotaItemModelFromJson(Map<String, dynamic> json) =>
+    QuotaItemModel(
+      used: (json['used'] as num?)?.toInt() ?? 0,
+      max: (json['max'] as num?)?.toInt() ?? 3,
+      remaining: (json['remaining'] as num?)?.toInt() ?? 3,
+      swapsUsed: (json['swapsUsed'] as num?)?.toInt() ?? 0,
+      swapsMax: (json['swapsMax'] as num?)?.toInt() ?? 5,
+      swapsRemaining: (json['swapsRemaining'] as num?)?.toInt() ?? 5,
+      lastGeneratedAt: json['lastGeneratedAt'] as String?,
+      lastSwappedAt: json['lastSwappedAt'] as String?,
+    );
+
+Map<String, dynamic> _$QuotaItemModelToJson(QuotaItemModel instance) =>
+    <String, dynamic>{
+      'used': instance.used,
+      'max': instance.max,
+      'remaining': instance.remaining,
+      'swapsUsed': instance.swapsUsed,
+      'swapsMax': instance.swapsMax,
+      'swapsRemaining': instance.swapsRemaining,
+      'lastGeneratedAt': instance.lastGeneratedAt,
+      'lastSwappedAt': instance.lastSwappedAt,
+    };
+
+UserQuotasModel _$UserQuotasModelFromJson(Map<String, dynamic> json) =>
+    UserQuotasModel(
+      diet: QuotaItemModel.fromJson(json['diet'] as Map<String, dynamic>),
+      workout: QuotaItemModel.fromJson(json['workout'] as Map<String, dynamic>),
+    );
+
+Map<String, dynamic> _$UserQuotasModelToJson(UserQuotasModel instance) =>
+    <String, dynamic>{
+      'diet': instance.diet,
+      'workout': instance.workout,
+    };
+
 AdminUserCountModel _$AdminUserCountModelFromJson(Map<String, dynamic> json) =>
     AdminUserCountModel(
       workoutPlans: (json['workoutPlans'] as num?)?.toInt() ?? 0,
@@ -30,6 +66,9 @@ AdminUserModel _$AdminUserModelFromJson(Map<String, dynamic> json) =>
           ? null
           : AdminUserCountModel.fromJson(
               json['_count'] as Map<String, dynamic>),
+      quotas: json['quotas'] == null
+          ? null
+          : UserQuotasModel.fromJson(json['quotas'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$AdminUserModelToJson(AdminUserModel instance) =>
@@ -40,6 +79,7 @@ Map<String, dynamic> _$AdminUserModelToJson(AdminUserModel instance) =>
       'role': instance.role,
       'createdAt': instance.createdAt,
       '_count': instance.count,
+      'quotas': instance.quotas,
     };
 
 UserPaginationModel _$UserPaginationModelFromJson(Map<String, dynamic> json) =>
@@ -98,6 +138,9 @@ UserDetailsDataModel _$UserDetailsDataModelFromJson(
       workoutProfile: json['workoutProfile'] as Map<String, dynamic>?,
       workoutPlans: json['workoutPlans'] as List<dynamic>?,
       dietPlans: json['dietPlans'] as List<dynamic>?,
+      quotas: json['quotas'] == null
+          ? null
+          : UserQuotasModel.fromJson(json['quotas'] as Map<String, dynamic>),
     );
 
 Map<String, dynamic> _$UserDetailsDataModelToJson(
@@ -112,6 +155,7 @@ Map<String, dynamic> _$UserDetailsDataModelToJson(
       'workoutProfile': instance.workoutProfile,
       'workoutPlans': instance.workoutPlans,
       'dietPlans': instance.dietPlans,
+      'quotas': instance.quotas,
     };
 
 UserDetailsResponseModel _$UserDetailsResponseModelFromJson(

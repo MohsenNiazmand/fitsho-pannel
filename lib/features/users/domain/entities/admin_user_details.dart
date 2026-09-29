@@ -1,3 +1,5 @@
+import 'user_quotas.dart';
+
 class AdminUserDetails {
   const AdminUserDetails({
     required this.id,
@@ -9,6 +11,7 @@ class AdminUserDetails {
     this.workoutProfile,
     this.workoutPlansCount = 0,
     this.dietPlansCount = 0,
+    this.quotas,
   });
 
   final String id;
@@ -20,4 +23,6 @@ class AdminUserDetails {
   final Map<String, dynamic>? workoutProfile;
   final int workoutPlansCount;
   final int dietPlansCount;
+  final UserQuotas? quotas;
 }
+

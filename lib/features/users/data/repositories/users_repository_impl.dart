@@ -51,4 +51,26 @@ class UsersRepositoryImpl implements UsersRepository {
       return left(ServerFailure(e.toString()));
     }
   }
+
+  @override
+  Future<Either<Failure, AdminUserDetails>> resetUserQuotas(
+    String id, {
+    String target = 'all',
+  }) async {
+    try {
+      final response = await _apiService.resetUserQuotas(id, {'target': target});
+      return right(response.toEntity());
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 404) {
+        return left(const NotFoundFailure('کاربر مورد نظر یافت نشد'));
+      }
+      final message = e.response?.data is Map && e.response?.data['message'] != null
+          ? e.response?.data['message'].toString()
+          : e.message ?? 'خطا در ریست سهمیه‌های کاربر';
+      return left(ServerFailure(message ?? 'خطا در ارتباط با سرور'));
+    } catch (e) {
+      return left(ServerFailure(e.toString()));
+    }
+  }
 }
+
