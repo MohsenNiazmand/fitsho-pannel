@@ -22,6 +22,23 @@ AdminExerciseModel _$AdminExerciseModelFromJson(Map<String, dynamic> json) =>
               ?.map((e) => e as String)
               .toList() ??
           const [],
+      locations: (json['locations'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      levels: (json['levels'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      disciplines: (json['disciplines'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      contraindications: (json['contraindications'] as List<dynamic>?)
+              ?.map((e) => e as String)
+              .toList() ??
+          const [],
+      isCustomized: json['isCustomized'] as bool? ?? false,
       cue: json['cue'] as String?,
       gifUrl: json['gifUrl'] as String?,
       videoUrl: json['videoUrl'] as String?,
@@ -38,6 +55,11 @@ Map<String, dynamic> _$AdminExerciseModelToJson(AdminExerciseModel instance) =>
       'primaryMuscle': instance.primaryMuscle,
       'secondaryMuscles': instance.secondaryMuscles,
       'equipment': instance.equipment,
+      'locations': instance.locations,
+      'levels': instance.levels,
+      'disciplines': instance.disciplines,
+      'contraindications': instance.contraindications,
+      'isCustomized': instance.isCustomized,
       'cue': instance.cue,
       'gifUrl': instance.gifUrl,
       'videoUrl': instance.videoUrl,

@@ -8,6 +8,11 @@ class AdminExercise {
     required this.primaryMuscle,
     this.secondaryMuscles = const [],
     this.equipment = const [],
+    this.locations = const [],
+    this.levels = const [],
+    this.disciplines = const [],
+    this.contraindications = const [],
+    this.isCustomized = false,
     this.cue,
     this.gifUrl,
     this.videoUrl,
@@ -22,6 +27,11 @@ class AdminExercise {
   final String primaryMuscle;
   final List<String> secondaryMuscles;
   final List<String> equipment;
+  final List<String> locations;
+  final List<String> levels;
+  final List<String> disciplines;
+  final List<String> contraindications;
+  final bool isCustomized;
   final String? cue;
   final String? gifUrl;
   final String? videoUrl;
