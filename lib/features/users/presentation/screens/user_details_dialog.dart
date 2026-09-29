@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:fitsho_pannel/features/users/presentation/providers/users_provider.dart';
 import 'package:fitsho_pannel/core/theme/app_theme.dart';
 import 'package:fitsho_pannel/features/users/domain/entities/admin_user_details.dart';
+import 'package:fitsho_pannel/features/users/domain/entities/user_quotas.dart';
+
 
 class UserDetailsDialog extends ConsumerStatefulWidget {
   final String userId;
@@ -30,7 +32,8 @@ class _UserDetailsDialogState extends ConsumerState<UserDetailsDialog> {
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
-        width: 600,
+        width: 720,
+        constraints: const BoxConstraints(maxWidth: 720, maxHeight: 850),
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -53,42 +56,46 @@ class _UserDetailsDialogState extends ConsumerState<UserDetailsDialog> {
             ),
             const Divider(),
             const SizedBox(height: 16),
-            if (state.isLoadingDetails)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: CircularProgressIndicator(),
-                ),
-              )
-            else if (userDetails != null)
-              _buildUserDetails(userDetails)
-            else if (state.detailsError != null)
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(32.0),
-                  child: Column(
-                    children: [
-                      const Icon(Icons.error_outline, color: AppTheme.dangerColor, size: 48),
-                      const SizedBox(height: 16),
-                      Text(state.detailsError!, style: const TextStyle(color: AppTheme.dangerColor)),
-                    ],
-                  ),
-                ),
-              )
-            else
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(32.0),
-                  child: Text('اطلاعاتی یافت نشد'),
-                ),
+            Expanded(
+              child: SingleChildScrollView(
+                child: state.isLoadingDetails
+                    ? const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
+                    : userDetails != null
+                        ? _buildUserDetails(userDetails, state.isResettingQuotas)
+                        : state.detailsError != null
+                            ? Center(
+                                child: Padding(
+                                  padding: const EdgeInsets.all(32.0),
+                                  child: Column(
+                                    children: [
+                                      const Icon(Icons.error_outline, color: AppTheme.dangerColor, size: 48),
+                                      const SizedBox(height: 16),
+                                      Text(state.detailsError!, style: const TextStyle(color: AppTheme.dangerColor)),
+                                    ],
+                                  ),
+                                ),
+                              )
+                            : const Center(
+                                child: Padding(
+                                  padding: EdgeInsets.all(32.0),
+                                  child: Text('اطلاعاتی یافت نشد'),
+                                ),
+                              ),
               ),
+            ),
           ],
         ),
       ),
     );
+
   }
 
-  Widget _buildUserDetails(AdminUserDetails user) {
+  Widget _buildUserDetails(AdminUserDetails user, bool isResetting) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -151,6 +158,10 @@ class _UserDetailsDialogState extends ConsumerState<UserDetailsDialog> {
           ),
           const SizedBox(height: 24),
         ],
+        const SizedBox(height: 24),
+        _buildQuotasSection(context, user, isResetting),
+        const SizedBox(height: 24),
+
         Text(
           'آمار کاربر',
           style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -193,6 +204,305 @@ class _UserDetailsDialogState extends ConsumerState<UserDetailsDialog> {
       ],
     );
   }
+
+  Widget _buildQuotasSection(BuildContext context, AdminUserDetails user, bool isResetting) {
+    final quotas = user.quotas;
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.darkBackground.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppTheme.darkCard.withValues(alpha: 0.5)),
+      ),
+
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.speed_rounded, size: 20, color: AppTheme.primaryColor),
+                  const SizedBox(width: 8),
+                  Text(
+                    'سهمیه‌ها و محدودیت‌ها',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.textPrimaryDark,
+                        ),
+                  ),
+                ],
+              ),
+              ElevatedButton.icon(
+                onPressed: isResetting ? null : () => _showResetQuotasDialog(context, user),
+                icon: isResetting
+                    ? const SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      )
+                    : const Icon(Icons.restart_alt_rounded, size: 16),
+                label: Text(isResetting ? 'در حال اعمال...' : 'شارژ سهمیه / ریست'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  textStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: _buildQuotaCard(
+                  title: 'برنامه تمرینی',
+                  icon: Icons.fitness_center_rounded,
+                  color: Colors.blueAccent,
+                  quota: quotas?.workout,
+                  swapLabel: 'جابجایی حرکت (Swap)',
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildQuotaCard(
+                  title: 'برنامه غذایی',
+                  icon: Icons.restaurant_rounded,
+                  color: AppTheme.successColor,
+                  quota: quotas?.diet,
+                  swapLabel: 'تغییر وعده (Swap)',
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuotaCard({
+    required String title,
+    required IconData icon,
+    required Color color,
+    required QuotaItem? quota,
+    required String swapLabel,
+  }) {
+    if (quota == null) {
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppTheme.darkSurface,
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Text('اطلاعات سهمیه موجود نیست', style: TextStyle(color: AppTheme.textSecondaryDark)),
+      );
+    }
+
+    final isFull = quota.remaining == 0;
+    final isSwapFull = quota.swapsRemaining == 0;
+
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppTheme.darkSurface,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(
+          color: isFull
+              ? AppTheme.dangerColor.withValues(alpha: 0.5)
+              : AppTheme.darkCard.withValues(alpha: 0.6),
+        ),
+
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: color),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 13),
+              ),
+              const Spacer(),
+              if (isFull)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: AppTheme.dangerColor.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: const Text(
+                    'سقف پر',
+                    style: TextStyle(color: AppTheme.dangerColor, fontSize: 10, fontWeight: FontWeight.bold),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          _buildQuotaProgressRow(
+            label: 'ساخت برنامه (۷ روزه)',
+            used: quota.used,
+            max: quota.max,
+            remaining: quota.remaining,
+            color: color,
+          ),
+          const SizedBox(height: 10),
+          _buildQuotaProgressRow(
+            label: swapLabel,
+            used: quota.swapsUsed,
+            max: quota.swapsMax,
+            remaining: quota.swapsRemaining,
+            color: isSwapFull ? AppTheme.dangerColor : AppTheme.warningColor,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildQuotaProgressRow({
+    required String label,
+    required int used,
+    required int max,
+    required int remaining,
+    required Color color,
+  }) {
+    final double percent = max > 0 ? (used / max).clamp(0.0, 1.0) : 0.0;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(label, style: const TextStyle(color: AppTheme.textSecondaryDark, fontSize: 11)),
+            Text(
+              '$used از $max (باقی: $remaining)',
+              style: TextStyle(
+                color: remaining == 0 ? AppTheme.dangerColor : AppTheme.textPrimaryDark,
+                fontWeight: FontWeight.bold,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(4),
+          child: LinearProgressIndicator(
+            value: percent,
+            minHeight: 6,
+            backgroundColor: Colors.white.withValues(alpha: 0.08),
+            valueColor: AlwaysStoppedAnimation<Color>(
+              remaining == 0 ? AppTheme.dangerColor : color,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showResetQuotasDialog(BuildContext context, AdminUserDetails user) {
+    String selectedTarget = 'all';
+
+    showDialog(
+      context: context,
+      builder: (dialogCtx) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: const Row(
+            children: [
+              Icon(Icons.restart_alt_rounded, color: AppTheme.primaryColor),
+              SizedBox(width: 8),
+              Text('شارژ مجدد سهمیه‌های کاربر'),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'آیا از ریست کردن محدودیت‌های کاربر «${user.name ?? user.mobile}» اطمینان دارید؟',
+                style: const TextStyle(color: AppTheme.textPrimaryDark),
+              ),
+              const SizedBox(height: 16),
+              const Text(
+                'نوع سهمیه جهت ریست:',
+                style: TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondaryDark, fontSize: 12),
+              ),
+              const SizedBox(height: 8),
+              RadioListTile<String>(
+                title: const Text('تمام سهمیه‌ها (تمرینی و غذایی)'),
+                value: 'all',
+                groupValue: selectedTarget,
+                onChanged: (val) => setDialogState(() => selectedTarget = val!),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+              RadioListTile<String>(
+                title: const Text('فقط سهمیه برنامه تمرینی و حرکات'),
+                value: 'workout',
+                groupValue: selectedTarget,
+                onChanged: (val) => setDialogState(() => selectedTarget = val!),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+              RadioListTile<String>(
+                title: const Text('فقط سهمیه برنامه غذایی و وعده‌ها'),
+                value: 'diet',
+                groupValue: selectedTarget,
+                onChanged: (val) => setDialogState(() => selectedTarget = val!),
+                contentPadding: EdgeInsets.zero,
+                dense: true,
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: const Text('انصراف'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                Navigator.of(dialogCtx).pop();
+                final success = await ref
+                    .read(usersNotifierProvider.notifier)
+                    .resetUserQuotas(user.id, target: selectedTarget);
+
+                if (!context.mounted) return;
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('سهمیه‌های کاربر با موفقیت شارژ و ریست شد.'),
+                      backgroundColor: AppTheme.successColor,
+                    ),
+                  );
+                } else {
+                  final error = ref.read(usersNotifierProvider).resetQuotaError;
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(error ?? 'خطا در شارژ مجدد سهمیه‌ها'),
+                      backgroundColor: AppTheme.dangerColor,
+                    ),
+                  );
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.primaryColor,
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('تایید و ریست'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
 }
 
 class _DetailRow extends StatelessWidget {

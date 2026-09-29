@@ -5,6 +5,8 @@ import 'package:fitsho_pannel/core/theme/app_theme.dart';
 import 'dart:async';
 import 'user_details_dialog.dart';
 import 'package:fitsho_pannel/features/users/domain/entities/admin_user_item.dart';
+import 'package:fitsho_pannel/features/users/domain/entities/user_quotas.dart';
+
 
 class UsersScreen extends ConsumerStatefulWidget {
   const UsersScreen({super.key});
@@ -180,6 +182,8 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
               DataColumn(label: Text('موبایل')),
               DataColumn(label: Text('نام')),
               DataColumn(label: Text('نقش')),
+              DataColumn(label: Text('سهمیه تمرین')),
+              DataColumn(label: Text('سهمیه غذا')),
               DataColumn(label: Text('تاریخ ثبت نام')),
               DataColumn(label: Text('عملیات')),
             ],
@@ -190,6 +194,20 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
                   DataCell(Text(user.mobile)),
                   DataCell(Text(user.name ?? '-')),
                   DataCell(_buildRoleBadge(user.role)),
+                  DataCell(
+                    _buildQuotaBadge(
+                      user.quotas?.workout,
+                      label: 'سهمیه تمرینی',
+                      icon: Icons.fitness_center_rounded,
+                    ),
+                  ),
+                  DataCell(
+                    _buildQuotaBadge(
+                      user.quotas?.diet,
+                      label: 'سهمیه غذایی',
+                      icon: Icons.restaurant_rounded,
+                    ),
+                  ),
                   DataCell(Text(user.createdAt.toString().split(' ')[0])),
                   DataCell(
                     IconButton(
@@ -207,6 +225,55 @@ class _UsersScreenState extends ConsumerState<UsersScreen> {
       ),
     );
   }
+
+  Widget _buildQuotaBadge(
+    QuotaItem? quota, {
+    required String label,
+    required IconData icon,
+  }) {
+    if (quota == null) {
+      return const Text('-', style: TextStyle(color: AppTheme.textSecondaryDark));
+    }
+
+    final isFull = quota.remaining == 0;
+    final isWarning = quota.remaining == 1;
+
+    final Color badgeColor = isFull
+        ? AppTheme.dangerColor
+        : (isWarning ? AppTheme.warningColor : AppTheme.successColor);
+
+    return Tooltip(
+      message: '$label\nساخت برنامه: ${quota.used} از ${quota.max} (باقیمانده: ${quota.remaining})\nسواپ روزانه: ${quota.swapsUsed} از ${quota.swapsMax} (باقیمانده: ${quota.swapsRemaining})',
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(
+          color: badgeColor.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: badgeColor.withValues(alpha: 0.4)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: badgeColor),
+            const SizedBox(width: 5),
+            Text(
+              '${quota.used}/${quota.max}',
+              style: TextStyle(
+                color: badgeColor,
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            if (isFull) ...[
+              const SizedBox(width: 4),
+              Icon(Icons.block, size: 12, color: badgeColor),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
 
   Widget _buildRoleBadge(String role) {
     Color color;

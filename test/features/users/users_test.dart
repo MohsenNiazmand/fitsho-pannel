@@ -173,7 +173,7 @@ void main() {
 
   group('UsersScreen Widget Tests', () {
     testWidgets('renders users list, search input, and table items', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1200, 800);
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -199,10 +199,12 @@ void main() {
       expect(find.text('09129998877'), findsOneWidget);
       expect(find.text('مدیر'), findsOneWidget);
       expect(find.text('کاربر عادی'), findsOneWidget);
+      expect(find.text('سهمیه تمرین'), findsOneWidget);
+      expect(find.text('سهمیه غذا'), findsOneWidget);
     });
 
-    testWidgets('clicking view details opens user details modal', (WidgetTester tester) async {
-      tester.view.physicalSize = const Size(1200, 800);
+    testWidgets('clicking view details opens user details modal with quotas section', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1600, 900);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() => tester.view.resetPhysicalSize());
 
@@ -230,6 +232,9 @@ void main() {
       expect(find.text('خلاصه وضعیت فیزیکی'), findsOneWidget);
       expect(find.text('25 سال'), findsOneWidget);
       expect(find.text('180 سانتی‌متر'), findsOneWidget);
+      expect(find.text('سهمیه‌ها و محدودیت‌ها'), findsOneWidget);
+      expect(find.text('شارژ سهمیه / ریست'), findsOneWidget);
     });
   });
 }
+
