@@ -16,12 +16,24 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
 
   static const List<Map<String, String>> _categories = [
     {'label': 'همه دسته‌ها', 'value': ''},
+    {'label': '🩹 حرکات اصلاحی', 'value': 'corrective'},
     {'label': 'قدرتی', 'value': 'strength'},
     {'label': 'هوازی', 'value': 'cardio'},
     {'label': 'انعطاف‌پذیری', 'value': 'flexibility'},
     {'label': 'پویایی (Warm-up)', 'value': 'mobility'},
     {'label': 'تعادلی', 'value': 'balance'},
     {'label': 'پلیومتریک', 'value': 'plyometric'},
+  ];
+
+  static const List<Map<String, String>> _musclesFilter = [
+    {'label': 'همه عضلات', 'value': ''},
+    {'label': 'سینه', 'value': 'chest'},
+    {'label': 'پشت و زیربغل', 'value': 'back'},
+    {'label': 'پا و پایین‌تنه', 'value': 'legs'},
+    {'label': 'سرشانه', 'value': 'shoulders'},
+    {'label': 'بازو', 'value': 'arms'},
+    {'label': 'شکم و میان‌تنه', 'value': 'core'},
+    {'label': 'باسن', 'value': 'glutes'},
   ];
 
   static const List<Map<String, String>> _locationsFilter = [
@@ -865,6 +877,61 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
               const Padding(
                 padding: EdgeInsets.only(left: 8),
                 child: Text(
+                  'عضله هدف:',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    color: AppTheme.textSecondaryDark,
+                  ),
+                ),
+              ),
+              ..._musclesFilter.map((muscle) {
+                final isSelected =
+                    (state.selectedMuscle ?? '') == muscle['value'];
+                return Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: FilterChip(
+                    label: Text(muscle['label']!),
+                    selected: isSelected,
+                    selectedColor: AppTheme.accentColor.withValues(alpha: 0.2),
+                    checkmarkColor: AppTheme.accentColor,
+                    labelStyle: TextStyle(
+                      fontSize: 11,
+                      fontWeight:
+                          isSelected ? FontWeight.bold : FontWeight.normal,
+                      color: isSelected
+                          ? AppTheme.accentColor
+                          : AppTheme.textSecondaryDark,
+                    ),
+                    backgroundColor: AppTheme.darkSurface,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      side: BorderSide(
+                        color: isSelected
+                            ? AppTheme.accentColor
+                            : const Color(0xFF334155),
+                      ),
+                    ),
+                    onSelected: (_) {
+                      ref
+                          .read(exercisesNotifierProvider.notifier)
+                          .onMuscleSelected(
+                              muscle['value']!.isEmpty ? null : muscle['value']);
+                    },
+                  ),
+                );
+              }),
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 8),
+                child: Text(
                   'مکان تمرین:',
                   style: TextStyle(
                     fontSize: 12,
@@ -979,7 +1046,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             crossAxisCount: crossAxisCount,
             crossAxisSpacing: 16,
             mainAxisSpacing: 16,
-            mainAxisExtent: 175,
+            mainAxisExtent: 245,
           ),
           itemCount: displayedExercises.length,
           itemBuilder: (context, index) {
@@ -1040,6 +1107,65 @@ class _ExerciseCard extends StatelessWidget {
   final AdminExercise exercise;
   final VoidCallback onEdit;
 
+  static const Map<String, String> _categoryNames = {
+    'strength': 'قدرتی',
+    'cardio': 'هوازی',
+    'flexibility': 'انعطاف‌پذیری',
+    'mobility': 'پویایی / گرم‌کردن',
+    'balance': 'تعادلی',
+    'plyometric': 'پلیومتریک',
+    'corrective': 'حرکات اصلاحی',
+  };
+
+  static const Map<String, String> _muscleNames = {
+    'chest': 'سینه',
+    'back': 'پشت و زیربغل',
+    'legs': 'پا',
+    'arms': 'بازو',
+    'shoulders': 'سرشانه',
+    'core': 'شکم و کور',
+    'glutes': 'باسن',
+    'calves': 'ساق پا',
+    'full_body': 'تمام بدن',
+    'triceps': 'پشت بازو',
+    'biceps': 'جلو بازو',
+    'forearms': 'ساعد',
+    'traps': 'کول',
+    'lats': 'زیربغل',
+    'quads': 'چهارسر',
+    'hamstrings': 'همسترینگ',
+  };
+
+  static const Map<String, String> _equipmentNames = {
+    'none': 'بدون ابزار',
+    'bodyweight': 'وزن بدن',
+    'dumbbell': 'دمبل',
+    'barbell': 'هالتر',
+    'kettlebell': 'کتل‌بل',
+    'resistance_band': 'کش',
+    'pull_up_bar': 'بارفیکس',
+    'bench': 'نیمکت',
+    'machine': 'دستگاه',
+    'cable': 'سیم‌کش',
+    'mat': 'مت',
+    'treadmill': 'تردمیل',
+    'stationary_bike': 'دوچرخه ثابت',
+    'jump_rope': 'طناب',
+  };
+
+  static const Map<String, String> _contraindicationNames = {
+    'knee': 'زانو',
+    'shoulder': 'شانه',
+    'lower_back': 'گودی کمر',
+    'upper_back': 'بالای کمر',
+    'ankle': 'مچ پا',
+    'wrist': 'مچ دست',
+    'neck': 'گردن',
+    'hip': 'مفصل لگن',
+    'elbow': 'آرنج',
+    'headache': 'سردرد/فشار',
+  };
+
   Color _getCategoryColor(String category) {
     switch (category) {
       case 'strength':
@@ -1054,6 +1180,8 @@ class _ExerciseCard extends StatelessWidget {
         return const Color(0xFF8B5CF6);
       case 'plyometric':
         return const Color(0xFFEC4899);
+      case 'corrective':
+        return const Color(0xFF14B8A6);
       default:
         return AppTheme.primaryColor;
     }
@@ -1061,115 +1189,255 @@ class _ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isCorrective = exercise.category == 'corrective' ||
+        exercise.disciplines.contains('corrective');
+
     return Card(
       child: Padding(
-        padding: const EdgeInsets.all(14),
+        padding: const EdgeInsets.all(12),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // GIF / Image thumbnail
-            ClipRRect(
-              borderRadius: BorderRadius.circular(12),
-              child: Container(
-                width: 100,
-                height: double.infinity,
-                color: const Color(0xFF1E293B),
-                child: exercise.gifUrl != null && exercise.gifUrl!.isNotEmpty
-                    ? Image.network(
-                        exercise.gifUrl!,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Center(
-                          child: Icon(Icons.fitness_center_rounded,
-                              color: AppTheme.accentColor, size: 28),
-                        ),
-                      )
-                    : const Center(
-                        child: Icon(Icons.fitness_center_rounded,
-                            color: AppTheme.textSecondaryDark, size: 28),
+            Stack(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                    width: 110,
+                    height: double.infinity,
+                    color: const Color(0xFF1E293B),
+                    child: exercise.gifUrl != null && exercise.gifUrl!.isNotEmpty
+                        ? Image.network(
+                            exercise.gifUrl!,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => const Center(
+                              child: Icon(Icons.fitness_center_rounded,
+                                  color: AppTheme.accentColor, size: 28),
+                            ),
+                          )
+                        : const Center(
+                            child: Icon(Icons.fitness_center_rounded,
+                                color: AppTheme.textSecondaryDark, size: 28),
+                          ),
+                  ),
+                ),
+                if (exercise.videoUrl != null && exercise.videoUrl!.isNotEmpty)
+                  Positioned(
+                    bottom: 6,
+                    right: 6,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.75),
+                        borderRadius: BorderRadius.circular(6),
                       ),
-              ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.videocam_rounded, size: 11, color: Color(0xFF10B981)),
+                          SizedBox(width: 2),
+                          Text(
+                            'ویدیو',
+                            style: TextStyle(
+                              fontSize: 9,
+                              color: Color(0xFF10B981),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(width: 14),
             // Exercise information
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Row(
+                  // Title & Action Row
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          exercise.name,
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimaryDark,
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              exercise.name,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimaryDark,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
+                          _buildChip(
+                            exercise.isActive ? 'فعال' : 'غیرفعال',
+                            exercise.isActive
+                                ? AppTheme.primaryColor
+                                : AppTheme.dangerColor,
+                          ),
+                          const SizedBox(width: 6),
+                          IconButton(
+                            icon: const Icon(Icons.edit_rounded,
+                                size: 18, color: AppTheme.primaryColor),
+                            tooltip: 'ویرایش حرکت',
+                            onPressed: onEdit,
+                            padding: EdgeInsets.zero,
+                            constraints: const BoxConstraints(),
+                          ),
+                        ],
                       ),
-                      IconButton(
-                        icon: const Icon(Icons.edit_rounded,
-                            size: 18, color: AppTheme.primaryColor),
-                        tooltip: 'ویرایش حرکت',
-                        onPressed: onEdit,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(),
+                      const SizedBox(height: 2),
+                      Text(
+                        exercise.key,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: AppTheme.textSecondaryDark.withValues(alpha: 0.8),
+                          fontFamily: 'monospace',
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    exercise.key,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: AppTheme.textSecondaryDark.withValues(alpha: 0.8),
-                      fontFamily: 'monospace',
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
+
+                  // Badges wrap
                   Wrap(
-                    spacing: 6,
+                    spacing: 5,
                     runSpacing: 4,
                     children: [
+                      // Highlight corrective badge
+                      if (isCorrective)
+                        _buildHighlightChip(
+                          '🩹 حرکت اصلاحی',
+                          const Color(0xFF14B8A6),
+                        ),
+
+                      // Category
                       _buildChip(
-                        exercise.primaryMuscle,
-                        AppTheme.accentColor,
-                      ),
-                      _buildChip(
-                        exercise.category,
+                        _categoryNames[exercise.category] ?? exercise.category,
                         _getCategoryColor(exercise.category),
                       ),
+
+                      // Primary muscle
+                      _buildChip(
+                        '🎯 ${_muscleNames[exercise.primaryMuscle] ?? exercise.primaryMuscle}',
+                        const Color(0xFF38BDF8),
+                      ),
+
+                      // Secondary muscles
+                      if (exercise.secondaryMuscles.isNotEmpty)
+                        _buildChip(
+                          '+ ${exercise.secondaryMuscles.take(2).map((m) => _muscleNames[m] ?? m).join('، ')}',
+                          const Color(0xFF94A3B8),
+                        ),
+
+                      // Equipment
+                      if (exercise.equipment.isNotEmpty)
+                        _buildChip(
+                          '🏋️ ${exercise.equipment.take(2).map((e) => _equipmentNames[e] ?? e).join('، ')}',
+                          const Color(0xFFA855F7),
+                        ),
+
+                      // Location
+                      if (exercise.locations.isNotEmpty)
+                        _buildChip(
+                          exercise.locations.map((l) => l == 'gym' ? '🏢 باشگاه' : '🏠 خانه').join(' / '),
+                          const Color(0xFF64748B),
+                        ),
+
                       if (exercise.isCustomized)
                         _buildChip(
                           'شخصی‌سازی',
                           const Color(0xFF8B5CF6),
                         ),
-                      if (exercise.cue != null && exercise.cue!.isNotEmpty)
-                        _buildChip(
-                          'نکته‌دار',
-                          const Color(0xFF06B6D4),
-                        ),
-                      if (exercise.videoUrl != null && exercise.videoUrl!.isNotEmpty)
-                        _buildChip(
-                          'ویدیو',
-                          const Color(0xFF10B981),
-                        ),
-                      _buildChip(
-                        exercise.isActive ? 'فعال' : 'غیرفعال',
-                        exercise.isActive
-                            ? AppTheme.primaryColor
-                            : AppTheme.dangerColor,
-                      ),
                     ],
                   ),
+
+                  // Execution Cue (نکته اجرایی)
+                  if (exercise.cue != null && exercise.cue!.trim().isNotEmpty)
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF0F172A),
+                        borderRadius: BorderRadius.circular(6),
+                        border: Border.all(
+                          color: const Color(0xFF334155).withValues(alpha: 0.6),
+                        ),
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Icon(Icons.tips_and_updates_outlined,
+                              size: 13, color: Color(0xFF38BDF8)),
+                          const SizedBox(width: 5),
+                          Expanded(
+                            child: Text(
+                              exercise.cue!,
+                              style: const TextStyle(
+                                fontSize: 10.5,
+                                color: Color(0xFFCBD5E1),
+                                height: 1.25,
+                              ),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  // Contraindications (منع آسیب)
+                  if (exercise.contraindications.isNotEmpty)
+                    Row(
+                      children: [
+                        const Icon(Icons.warning_amber_rounded,
+                            size: 13, color: Color(0xFFF87171)),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            'منع آسیب: ${exercise.contraindications.map((c) => _contraindicationNames[c] ?? c).join('، ')}',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFFF87171),
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
                 ],
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHighlightChip(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.18),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withValues(alpha: 0.45)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );

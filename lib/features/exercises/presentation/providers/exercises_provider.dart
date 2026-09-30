@@ -170,6 +170,15 @@ class ExercisesNotifier extends StateNotifier<ExercisesState> {
     }
   }
 
+  Future<void> onMuscleSelected(String? muscle) async {
+    if (state.selectedMuscle == muscle) {
+      state = state.copyWith(clearMuscle: true);
+      await fetchExercises(page: 1, muscle: '');
+    } else {
+      await fetchExercises(page: 1, muscle: muscle);
+    }
+  }
+
   void onLocationSelected(String? location) {
     if (state.selectedLocation == location) {
       state = state.copyWith(clearLocation: true);

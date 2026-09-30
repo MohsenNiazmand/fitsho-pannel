@@ -1,6 +1,8 @@
 import 'package:dio/dio.dart';
 import '../constants/app_constants.dart';
 import '../storage/token_storage.dart';
+import 'api_logger_interceptor.dart';
+import 'auth_interceptor.dart';
 
 Dio createDioClient(TokenStorage tokenStorage) {
   final dio = Dio(
@@ -15,24 +17,16 @@ Dio createDioClient(TokenStorage tokenStorage) {
     ),
   );
 
+  // 1. Auth interceptor (token injection + automatic silent refresh & retry)
   dio.interceptors.add(
-    InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await tokenStorage.getAccessToken();
-        if (token != null && token.isNotEmpty) {
-          options.headers['Authorization'] = 'Bearer $token';
-        }
-        return handler.next(options);
-      },
-      onError: (DioException error, handler) async {
-        if (error.response?.statusCode == 401) {
-          // Token expired or invalid
-          await tokenStorage.clear();
-        }
-        return handler.next(error);
-      },
+    AuthInterceptor(
+      tokenStorage: tokenStorage,
+      dio: dio,
     ),
   );
+
+  // 2. Request and response logger
+  dio.interceptors.add(ApiLoggerInterceptor());
 
   return dio;
 }

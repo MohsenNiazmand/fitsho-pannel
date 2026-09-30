@@ -20,19 +20,24 @@ class TokenStorageImpl implements TokenStorage {
 
   @override
   Future<void> saveTokens({required String accessToken, String? refreshToken}) async {
-    await _secureStorage.write(key: AppConstants.adminTokenKey, value: accessToken);
-    if (refreshToken != null) {
-      await _secureStorage.write(key: AppConstants.adminRefreshTokenKey, value: refreshToken);
-    }
-    // Also save in prefs for fast synchronous/web fallback
+    try {
+      await _secureStorage.write(key: AppConstants.adminTokenKey, value: accessToken);
+      if (refreshToken != null) {
+        await _secureStorage.write(key: AppConstants.adminRefreshTokenKey, value: refreshToken);
+      }
+    } catch (_) {}
+    // Also save in prefs for fast synchronous/web/desktop fallback
     await _prefs.setString(AppConstants.adminTokenKey, accessToken);
+    if (refreshToken != null) {
+      await _prefs.setString(AppConstants.adminRefreshTokenKey, refreshToken);
+    }
   }
 
   @override
   Future<String?> getAccessToken() async {
     try {
       final token = await _secureStorage.read(key: AppConstants.adminTokenKey);
-      if (token != null) return token;
+      if (token != null && token.isNotEmpty) return token;
     } catch (_) {}
     return _prefs.getString(AppConstants.adminTokenKey);
   }
@@ -40,10 +45,10 @@ class TokenStorageImpl implements TokenStorage {
   @override
   Future<String?> getRefreshToken() async {
     try {
-      return await _secureStorage.read(key: AppConstants.adminRefreshTokenKey);
-    } catch (_) {
-      return null;
-    }
+      final token = await _secureStorage.read(key: AppConstants.adminRefreshTokenKey);
+      if (token != null && token.isNotEmpty) return token;
+    } catch (_) {}
+    return _prefs.getString(AppConstants.adminRefreshTokenKey);
   }
 
   @override
@@ -53,6 +58,7 @@ class TokenStorageImpl implements TokenStorage {
       await _secureStorage.delete(key: AppConstants.adminRefreshTokenKey);
     } catch (_) {}
     await _prefs.remove(AppConstants.adminTokenKey);
+    await _prefs.remove(AppConstants.adminRefreshTokenKey);
     await _prefs.remove(AppConstants.adminUserKey);
   }
 
