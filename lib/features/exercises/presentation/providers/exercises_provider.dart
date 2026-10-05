@@ -40,6 +40,7 @@ class ExercisesState {
     this.selectedCategory,
     this.selectedMuscle,
     this.selectedLocation,
+    this.needsAttentionOnly = false,
   });
 
   final bool isLoading;
@@ -53,14 +54,19 @@ class ExercisesState {
   final String? selectedCategory;
   final String? selectedMuscle;
   final String? selectedLocation;
+  final bool needsAttentionOnly;
 
   List<AdminExercise> get filteredExercises {
-    if (selectedLocation == null || selectedLocation!.isEmpty) {
-      return exercises;
+    var result = exercises;
+    if (selectedLocation != null && selectedLocation!.isNotEmpty) {
+      result = result
+          .where((e) => e.locations.contains(selectedLocation))
+          .toList();
     }
-    return exercises
-        .where((e) => e.locations.contains(selectedLocation))
-        .toList();
+    if (needsAttentionOnly) {
+      result = result.where((e) => e.needsAttention).toList();
+    }
+    return result;
   }
 
   ExercisesState copyWith({
@@ -80,6 +86,7 @@ class ExercisesState {
     bool clearMuscle = false,
     String? selectedLocation,
     bool clearLocation = false,
+    bool? needsAttentionOnly,
   }) {
     return ExercisesState(
       isLoading: isLoading ?? this.isLoading,
@@ -93,6 +100,7 @@ class ExercisesState {
       selectedCategory: clearCategory ? null : (selectedCategory ?? this.selectedCategory),
       selectedMuscle: clearMuscle ? null : (selectedMuscle ?? this.selectedMuscle),
       selectedLocation: clearLocation ? null : (selectedLocation ?? this.selectedLocation),
+      needsAttentionOnly: needsAttentionOnly ?? this.needsAttentionOnly,
     );
   }
 }
@@ -185,6 +193,14 @@ class ExercisesNotifier extends StateNotifier<ExercisesState> {
     } else {
       state = state.copyWith(selectedLocation: location);
     }
+  }
+
+  void toggleNeedsAttentionOnly() {
+    state = state.copyWith(needsAttentionOnly: !state.needsAttentionOnly);
+  }
+
+  void setNeedsAttentionOnly(bool value) {
+    state = state.copyWith(needsAttentionOnly: value);
   }
 
   Future<void> nextPage() async {

@@ -22,7 +22,7 @@ Additional panel needs coming from the audit in backend B16: visibility into exe
 | Phase | Title | Backend dependency | Status |
 |-------|-------|--------------------|--------|
 | PA1 | Remove `elite` from the exercise editor and level display | B13 | ☑ |
-| PA2 | Warn about legacy/invalid values and empty fields in the editor | B13/B16 | ☐ |
+| PA2 | Warn about legacy/invalid values and empty fields in the editor | B13/B16 | ☑ |
 | PA3 | (Optional) exercise pool coverage view | B16 (new read-only endpoint) | ☐ |
 
 ---
@@ -72,10 +72,10 @@ instead of sending elite to the API.
 - Validation blocks submit with no levels; legacy discipline shows the warning; "needs attention" filter returns the right rows.
 
 **Checklist**
-- [ ] Client-side validation
-- [ ] Legacy-value warnings
-- [ ] "Needs attention" filter
-- [ ] Tests green
+- [x] Client-side validation
+- [x] Legacy-value warnings
+- [x] "Needs attention" filter
+- [x] Tests green
 
 **Commit message**
 ```

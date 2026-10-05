@@ -142,6 +142,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         List<String>.from(exercise?.secondaryMuscles ?? []);
     final selectedContraindications =
         List<String>.from(exercise?.contraindications ?? []);
+    final fieldErrors = <String, String>{};
 
     showDialog(
       context: context,
@@ -223,6 +224,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     label: 'نام حرکت (فارسی) *',
                                     hint: 'مثال: پرس سینه دمبل',
                                     controller: nameController,
+                                    errorMessage: fieldErrors['name'],
                                   ),
                                   const SizedBox(height: 14),
                                   _buildField(
@@ -230,6 +232,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     hint: 'مثال: dumbbell_bench_press',
                                     controller: keyController,
                                     enabled: !isEditing,
+                                    errorMessage: fieldErrors['key'],
                                   ),
                                   const SizedBox(height: 14),
                                   Row(
@@ -303,6 +306,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     label: 'مکان‌های تمرینی مجاز *',
                                     options: _locationOptions,
                                     selectedValues: selectedLocations,
+                                    errorMessage: fieldErrors['locations'],
                                     onSelected: (key, selected) {
                                       setDialogState(() {
                                         if (selected) {
@@ -310,6 +314,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                         } else {
                                           selectedLocations.remove(key);
                                         }
+                                        fieldErrors.remove('locations');
                                       });
                                     },
                                   ),
@@ -320,6 +325,11 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     label: 'رشته‌های ورزشی مرتبط (۵ رشته استاندارد) *',
                                     options: _disciplineOptions,
                                     selectedValues: selectedDisciplines,
+                                    errorMessage: fieldErrors['disciplines'],
+                                    legacyTooltip:
+                                        'Legacy value — will not be matched by the workout generator.',
+                                    unknownWarningMessage:
+                                        'رشته نامعتبر یا قدیمی در حرکت وجود دارد — در تولید برنامه هوش مصنوعی تطبیق داده نخواهد شد.',
                                     onSelected: (key, selected) {
                                       setDialogState(() {
                                         if (selected) {
@@ -327,6 +337,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                         } else {
                                           selectedDisciplines.remove(key);
                                         }
+                                        fieldErrors.remove('disciplines');
                                       });
                                     },
                                   ),
@@ -337,6 +348,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     label: 'سطوح مهارت مجاز *',
                                     options: _levelOptions,
                                     selectedValues: selectedLevels,
+                                    errorMessage: fieldErrors['levels'],
                                     onSelected: (key, selected) {
                                       setDialogState(() {
                                         if (selected) {
@@ -344,6 +356,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                         } else {
                                           selectedLevels.remove(key);
                                         }
+                                        fieldErrors.remove('levels');
                                       });
                                     },
                                   ),
@@ -354,6 +367,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                     label: 'تجهیزات و ابزار موردنیاز *',
                                     options: _equipmentOptions,
                                     selectedValues: selectedEquipment,
+                                    errorMessage: fieldErrors['equipment'],
                                     onSelected: (key, selected) {
                                       setDialogState(() {
                                         if (selected) {
@@ -361,6 +375,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                         } else {
                                           selectedEquipment.remove(key);
                                         }
+                                        fieldErrors.remove('equipment');
                                       });
                                     },
                                   ),
@@ -455,6 +470,41 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                 onPressed: state.isSubmitting
                                     ? null
                                     : () async {
+                                        fieldErrors.clear();
+                                        if (nameController.text.trim().isEmpty) {
+                                          fieldErrors['name'] =
+                                              'نام حرکت نمی‌تواند خالی باشد';
+                                        }
+                                        if (keyController.text.trim().isEmpty) {
+                                          fieldErrors['key'] =
+                                              'کلید یکتا نمی‌تواند خالی باشد';
+                                        }
+                                        final sanitizedLevels = selectedLevels
+                                            .where((l) =>
+                                                _levelOptions.containsKey(l))
+                                            .toList();
+                                        if (sanitizedLevels.isEmpty) {
+                                          fieldErrors['levels'] =
+                                              'حداقل یک سطح مهارت مجاز باید انتخاب شود.';
+                                        }
+                                        if (selectedDisciplines.isEmpty) {
+                                          fieldErrors['disciplines'] =
+                                              'حداقل یک رشته ورزشی باید انتخاب شود.';
+                                        }
+                                        if (selectedLocations.isEmpty) {
+                                          fieldErrors['locations'] =
+                                              'حداقل یک مکان تمرینی باید انتخاب شود.';
+                                        }
+                                        if (selectedEquipment.isEmpty) {
+                                          fieldErrors['equipment'] =
+                                              'تجهیزات و ابزار موردنیاز نمی‌تواند خالی باشد (برای حرکات بدون وسیله از «بدون ابزار» یا «وزن بدن» استفاده کنید).';
+                                        }
+
+                                        if (fieldErrors.isNotEmpty) {
+                                          setDialogState(() {});
+                                          return;
+                                        }
+
                                         final data = {
                                           'key': keyController.text.trim(),
                                           'name': nameController.text.trim(),
@@ -546,6 +596,8 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     required List<String> selectedValues,
     required Function(String key, bool selected) onSelected,
     String? unknownWarningMessage,
+    String? legacyTooltip,
+    String? errorMessage,
   }) {
     final unknownValues =
         selectedValues.where((val) => !options.containsKey(val)).toList();
@@ -592,7 +644,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
               );
             }),
             ...unknownValues.map((unk) {
-              return FilterChip(
+              final chip = FilterChip(
                 avatar: const Icon(Icons.warning_amber_rounded,
                     size: 14, color: Color(0xFFF59E0B)),
                 label: Text('$unk (نامعتبر)'),
@@ -612,9 +664,27 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                     borderRadius: BorderRadius.circular(8)),
                 onSelected: (bool selected) => onSelected(unk, selected),
               );
+              if (legacyTooltip != null) {
+                return Tooltip(
+                  message: legacyTooltip,
+                  child: chip,
+                );
+              }
+              return chip;
             }),
           ],
         ),
+        if (errorMessage != null) ...[
+          const SizedBox(height: 4),
+          Text(
+            errorMessage,
+            style: const TextStyle(
+              fontSize: 11,
+              color: AppTheme.dangerColor,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
         if (unknownValues.isNotEmpty) ...[
           const SizedBox(height: 6),
           Container(
@@ -652,6 +722,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     required TextEditingController controller,
     bool enabled = true,
     int maxLines = 1,
+    String? errorMessage,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -680,6 +751,7 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
             isDense: true,
             contentPadding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            errorText: errorMessage,
           ),
         ),
       ],
@@ -1034,6 +1106,45 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                   ),
                 );
               }),
+              const SizedBox(width: 12),
+              Container(
+                height: 22,
+                width: 1,
+                color: const Color(0xFF334155),
+              ),
+              const SizedBox(width: 12),
+              FilterChip(
+                avatar: const Icon(Icons.warning_amber_rounded,
+                    size: 14, color: Color(0xFFF97316)),
+                label: const Text('نیازمند بررسی'),
+                selected: state.needsAttentionOnly,
+                selectedColor:
+                    const Color(0xFFF97316).withValues(alpha: 0.2),
+                checkmarkColor: const Color(0xFFF97316),
+                labelStyle: TextStyle(
+                  fontSize: 11,
+                  fontWeight: state.needsAttentionOnly
+                      ? FontWeight.bold
+                      : FontWeight.normal,
+                  color: state.needsAttentionOnly
+                      ? const Color(0xFFF97316)
+                      : AppTheme.textSecondaryDark,
+                ),
+                backgroundColor: AppTheme.darkSurface,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  side: BorderSide(
+                    color: state.needsAttentionOnly
+                        ? const Color(0xFFF97316)
+                        : const Color(0xFF334155),
+                  ),
+                ),
+                onSelected: (_) {
+                  ref
+                      .read(exercisesNotifierProvider.notifier)
+                      .toggleNeedsAttentionOnly();
+                },
+              ),
             ],
           ),
         ),
@@ -1370,6 +1481,24 @@ class _ExerciseCard extends StatelessWidget {
                     spacing: 5,
                     runSpacing: 4,
                     children: [
+                      // Needs attention badge
+                      if (exercise.needsAttention)
+                        _buildHighlightChip(
+                          '⚠️ نیازمند بررسی',
+                          const Color(0xFFEA580C),
+                        ),
+
+                      // Legacy discipline warning chips
+                      for (final legacyDisc in exercise.legacyDisciplines)
+                        Tooltip(
+                          message:
+                              'Legacy value — will not be matched by the workout generator.',
+                          child: _buildHighlightChip(
+                            legacyDisc,
+                            const Color(0xFFF97316),
+                          ),
+                        ),
+
                       // Highlight corrective badge
                       if (isCorrective)
                         _buildHighlightChip(

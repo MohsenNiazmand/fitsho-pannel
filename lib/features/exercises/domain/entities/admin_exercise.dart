@@ -36,6 +36,40 @@ class AdminExercise {
   final String? gifUrl;
   final String? videoUrl;
   final bool isActive;
+
+  static const Set<String> canonicalLevels = {
+    'beginner',
+    'intermediate',
+    'advanced',
+  };
+
+  static const Set<String> canonicalDisciplines = {
+    'bodybuilding',
+    'fitness',
+    'corrective',
+    'cardio',
+    'flexibility',
+  };
+
+  bool get hasInvalidOrEmptyLevels =>
+      levels.isEmpty || levels.any((l) => !canonicalLevels.contains(l));
+
+  bool get hasInvalidOrEmptyDisciplines =>
+      disciplines.isEmpty ||
+      disciplines.any((d) => !canonicalDisciplines.contains(d));
+
+  bool get hasEmptyLocations => locations.isEmpty;
+
+  bool get hasEmptyEquipment => equipment.isEmpty;
+
+  List<String> get legacyDisciplines =>
+      disciplines.where((d) => !canonicalDisciplines.contains(d)).toList();
+
+  bool get needsAttention =>
+      hasInvalidOrEmptyLevels ||
+      hasInvalidOrEmptyDisciplines ||
+      hasEmptyLocations ||
+      hasEmptyEquipment;
 }
 
 class ExercisePagination {

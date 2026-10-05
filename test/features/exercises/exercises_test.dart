@@ -303,6 +303,7 @@ void main() {
           levels: ['elite'],
           disciplines: ['bodybuilding'],
           locations: ['gym'],
+          equipment: ['barbell'],
           isActive: true,
         ),
       ];
@@ -383,6 +384,183 @@ void main() {
 
       expect(find.text('پرس سینه هالتر'), findsNothing);
       expect(find.text('اسکات هالتر'), findsOneWidget);
+    });
+
+    testWidgets('validation blocks submit when levels are empty and shows inline error', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockExerciseRepository();
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            exerciseRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: const MaterialApp(
+            home: ExercisesScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final addBtn = find.text('افزودن حرکت جدید');
+      await tester.tap(addBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      final textFields = find.descendant(of: find.byType(Dialog), matching: find.byType(TextField));
+      await tester.enterText(textFields.at(0), 'حرکت تستی');
+      await tester.enterText(textFields.at(1), 'test_key');
+      await tester.pump();
+
+      // Deselect all default levels (beginner, intermediate, advanced)
+      final beginnerChip = find.text('مبتدی');
+      final intermediateChip = find.text('متوسط');
+      final advancedChip = find.text('پیشرفته');
+
+      await tester.ensureVisible(beginnerChip);
+      await tester.tap(beginnerChip);
+      await tester.tap(intermediateChip);
+      await tester.tap(advancedChip);
+      await tester.pump();
+
+      // Tap submit
+      final submitBtn = find.text('افزودن حرکت');
+      await tester.ensureVisible(submitBtn);
+      await tester.tap(submitBtn);
+      await tester.pump();
+
+      // Submit must be blocked
+      expect(mockRepo.lastCreatedData, isNull);
+      // Inline error message must be shown
+      expect(find.text('حداقل یک سطح مهارت مجاز باید انتخاب شود.'), findsOneWidget);
+    });
+
+    testWidgets('legacy discipline shows warning chip on card and in editor dialog with proper tooltip', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockExerciseRepository();
+      mockRepo.customExercises = [
+        const AdminExercise(
+          id: 'ex-legacy-disc',
+          key: 'legacy_disc_ex',
+          name: 'حرکت با رشته نامعتبر',
+          category: 'strength',
+          pattern: 'push',
+          primaryMuscle: 'chest',
+          levels: ['beginner'],
+          disciplines: ['crossfit'], // Non-canonical discipline
+          locations: ['gym'],
+          equipment: ['dumbbell'],
+          isActive: true,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            exerciseRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: const MaterialApp(
+            home: ExercisesScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('حرکت با رشته نامعتبر'), findsOneWidget);
+      // Raw legacy discipline chip rendered on card
+      expect(find.text('crossfit'), findsOneWidget);
+      // Needs attention badge rendered on card
+      expect(find.text('⚠️ نیازمند بررسی'), findsOneWidget);
+
+      // Verify tooltip on the legacy discipline chip
+      final tooltipFinder = find.byWidgetPredicate(
+        (widget) =>
+            widget is Tooltip &&
+            widget.message ==
+                'Legacy value — will not be matched by the workout generator.',
+      );
+      expect(tooltipFinder, findsOneWidget);
+
+      // Open edit dialog
+      final editBtn = find.byIcon(Icons.edit_rounded);
+      await tester.tap(editBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Warning chip in dialog
+      expect(find.textContaining('crossfit (نامعتبر)'), findsOneWidget);
+      expect(find.textContaining('رشته نامعتبر یا قدیمی'), findsOneWidget);
+    });
+
+    testWidgets('needs attention filter returns only rows requiring attention', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockExerciseRepository();
+      mockRepo.customExercises = [
+        const AdminExercise(
+          id: 'ex-valid',
+          key: 'valid_bench',
+          name: 'حرکت کامل و معتبر',
+          category: 'strength',
+          pattern: 'push',
+          primaryMuscle: 'chest',
+          levels: ['beginner', 'advanced'],
+          disciplines: ['bodybuilding'],
+          locations: ['gym'],
+          equipment: ['barbell'],
+          isActive: true,
+        ),
+        const AdminExercise(
+          id: 'ex-broken',
+          key: 'broken_ex',
+          name: 'حرکت ناقص',
+          category: 'strength',
+          pattern: 'pull',
+          primaryMuscle: 'back',
+          levels: [], // Empty levels -> needs attention!
+          disciplines: ['fitness'],
+          locations: ['gym'],
+          equipment: ['dumbbell'],
+          isActive: true,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            exerciseRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: const MaterialApp(
+            home: ExercisesScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Both exercises visible initially
+      expect(find.text('حرکت کامل و معتبر'), findsOneWidget);
+      expect(find.text('حرکت ناقص'), findsOneWidget);
+
+      // Tap 'نیازمند بررسی' filter chip
+      final attentionChip = find.text('نیازمند بررسی');
+      await tester.tap(attentionChip);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Only the broken exercise is shown
+      expect(find.text('حرکت کامل و معتبر'), findsNothing);
+      expect(find.text('حرکت ناقص'), findsOneWidget);
     });
   });
 }
