@@ -23,7 +23,7 @@ Additional panel needs coming from the audit in backend B16: visibility into exe
 |-------|-------|--------------------|--------|
 | PA1 | Remove `elite` from the exercise editor and level display | B13 | ☑ |
 | PA2 | Warn about legacy/invalid values and empty fields in the editor | B13/B16 | ☑ |
-| PA3 | (Optional) exercise pool coverage view | B16 (new read-only endpoint) | ☐ |
+| PA3 | (Optional) exercise pool coverage view | B16 (new read-only endpoint) | Won't do (backend endpoint not exposed) |
 
 ---
 
