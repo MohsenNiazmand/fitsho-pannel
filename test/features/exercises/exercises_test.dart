@@ -17,6 +17,7 @@ class MockExerciseRepository implements ExerciseRepository {
   String? categoryReceived;
   Map<String, dynamic>? lastCreatedData;
   Map<String, dynamic>? lastUpdatedData;
+  List<AdminExercise>? customExercises;
 
   @override
   Future<Either<Failure, AdminExercisesResult>> getExercises({
@@ -34,24 +35,22 @@ class MockExerciseRepository implements ExerciseRepository {
       return left(const ServerFailure('خطا در دریافت حرکات'));
     }
 
-    return right(
-      AdminExercisesResult(
-        exercises: [
-          const AdminExercise(
-            id: 'ex-1',
-            key: 'barbell_bench_press',
-            name: 'پرس سینه هالتر',
-            category: 'strength',
-            pattern: 'push',
-            primaryMuscle: 'chest',
-            gifUrl: 'https://example.com/bench.gif',
-            videoUrl: 'https://example.com/bench.mp4',
-            cue: 'کمر صاف باشد',
-            isCustomized: true,
-            locations: ['gym'],
-            disciplines: ['bodybuilding'],
-            isActive: true,
-          ),
+    final exercises = customExercises ?? [
+      const AdminExercise(
+        id: 'ex-1',
+        key: 'barbell_bench_press',
+        name: 'پرس سینه هالتر',
+        category: 'strength',
+        pattern: 'push',
+        primaryMuscle: 'chest',
+        gifUrl: 'https://example.com/bench.gif',
+        videoUrl: 'https://example.com/bench.mp4',
+        cue: 'کمر صاف باشد',
+        isCustomized: true,
+        locations: ['gym'],
+        disciplines: ['bodybuilding'],
+        isActive: true,
+      ),
           const AdminExercise(
             id: 'ex-2',
             key: 'barbell_squat',
@@ -64,9 +63,13 @@ class MockExerciseRepository implements ExerciseRepository {
             disciplines: ['fitness'],
             isActive: true,
           ),
-        ],
-        pagination: const ExercisePagination(
-          total: 2,
+        ];
+
+    return right(
+      AdminExercisesResult(
+        exercises: exercises,
+        pagination: ExercisePagination(
+          total: exercises.length,
           page: 1,
           limit: 20,
           totalPages: 1,
@@ -223,7 +226,7 @@ void main() {
       expect(find.text('افزودن حرکت جدید'), findsOneWidget);
       // Badges
       expect(find.text('شخصی‌سازی'), findsOneWidget);
-      expect(find.text('نکته‌دار'), findsOneWidget);
+      expect(find.text('کمر صاف باشد'), findsOneWidget);
       expect(find.text('ویدیو'), findsOneWidget);
     });
 
@@ -260,6 +263,12 @@ void main() {
       expect(find.text('تجهیزات و ابزار موردنیاز *'), findsOneWidget);
       expect(find.text('انصراف'), findsOneWidget);
 
+      // Verify level options: beginner, intermediate, advanced are present, and elite is NOT present
+      expect(find.text('مبتدی'), findsOneWidget);
+      expect(find.text('متوسط'), findsOneWidget);
+      expect(find.text('پیشرفته'), findsOneWidget);
+      expect(find.text('حرفه‌ای'), findsNothing);
+
       // Submit dialog and verify isCustomized: true is sent
       final textFields = find.descendant(of: find.byType(Dialog), matching: find.byType(TextField));
       await tester.enterText(textFields.at(0), 'حرکت جدید');
@@ -274,6 +283,72 @@ void main() {
       expect(mockRepo.lastCreatedData, isNotNull);
       expect(mockRepo.lastCreatedData!['key'], 'new_exercise_key');
       expect(mockRepo.lastCreatedData!['isCustomized'], true);
+      expect(mockRepo.lastCreatedData!['levels'], ['beginner', 'intermediate', 'advanced']);
+    });
+
+    testWidgets('opening exercise with legacy elite level shows warning and saving sends advanced only after selection', (WidgetTester tester) async {
+      tester.view.physicalSize = const Size(1400, 1000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() => tester.view.resetPhysicalSize());
+
+      final mockRepo = MockExerciseRepository();
+      mockRepo.customExercises = [
+        const AdminExercise(
+          id: 'ex-legacy',
+          key: 'legacy_bench_press',
+          name: 'پرس قدیمی',
+          category: 'strength',
+          pattern: 'push',
+          primaryMuscle: 'chest',
+          levels: ['elite'],
+          disciplines: ['bodybuilding'],
+          locations: ['gym'],
+          isActive: true,
+        ),
+      ];
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            exerciseRepositoryProvider.overrideWithValue(mockRepo),
+          ],
+          child: const MaterialApp(
+            home: ExercisesScreen(),
+          ),
+        ),
+      );
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(find.text('پرس قدیمی'), findsOneWidget);
+
+      // Tap edit button
+      final editBtn = find.byIcon(Icons.edit_rounded);
+      await tester.tap(editBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      // Unknown/legacy chip 'elite (نامعتبر)' and warning should be visible
+      expect(find.textContaining('elite (نامعتبر)'), findsOneWidget);
+      expect(find.textContaining('مقدار نامعتبر یا قدیمی'), findsOneWidget);
+
+      // Admin selects 'پیشرفته' (advanced)
+      final advancedChip = find.text('پیشرفته');
+      await tester.ensureVisible(advancedChip);
+      await tester.tap(advancedChip);
+      await tester.pump();
+
+      // Tap save
+      final saveBtn = find.text('ذخیره تغییرات');
+      await tester.ensureVisible(saveBtn);
+      await tester.tap(saveBtn);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 50));
+
+      expect(mockRepo.lastUpdatedData, isNotNull);
+      // elite should be dropped and only advanced sent
+      expect(mockRepo.lastUpdatedData!['levels'], ['advanced']);
+      expect(mockRepo.lastUpdatedData!['levels'], isNot(contains('elite')));
     });
 
     testWidgets('filtering by location shows matching exercises', (WidgetTester tester) async {

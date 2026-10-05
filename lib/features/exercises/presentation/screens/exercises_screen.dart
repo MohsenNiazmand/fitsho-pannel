@@ -4,6 +4,12 @@ import 'package:fitsho_pannel/core/theme/app_theme.dart';
 import 'package:fitsho_pannel/features/exercises/domain/entities/admin_exercise.dart';
 import 'package:fitsho_pannel/features/exercises/presentation/providers/exercises_provider.dart';
 
+const Map<String, String> _levelOptions = {
+  'beginner': 'مبتدی',
+  'intermediate': 'متوسط',
+  'advanced': 'پیشرفته',
+};
+
 class ExercisesScreen extends ConsumerStatefulWidget {
   const ExercisesScreen({super.key});
 
@@ -55,12 +61,6 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     'flexibility': 'انعطاف‌پذیری و تحرک‌پذیری',
   };
 
-  static const Map<String, String> _levelOptions = {
-    'beginner': 'مبتدی',
-    'intermediate': 'متوسط',
-    'advanced': 'پیشرفته',
-    'elite': 'حرفه‌ای',
-  };
 
   static const Map<String, String> _equipmentOptions = {
     'none': 'بدون ابزار',
@@ -468,7 +468,10 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
                                               selectedSecondaryMuscles,
                                           'equipment': selectedEquipment,
                                           'locations': selectedLocations,
-                                          'levels': selectedLevels,
+                                          'levels': selectedLevels
+                                              .where((l) =>
+                                                  _levelOptions.containsKey(l))
+                                              .toList(),
                                           'disciplines': selectedDisciplines,
                                           'contraindications':
                                               selectedContraindications,
@@ -542,7 +545,11 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
     required Map<String, String> options,
     required List<String> selectedValues,
     required Function(String key, bool selected) onSelected,
+    String? unknownWarningMessage,
   }) {
+    final unknownValues =
+        selectedValues.where((val) => !options.containsKey(val)).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -558,32 +565,83 @@ class _ExercisesScreenState extends ConsumerState<ExercisesScreen> {
         Wrap(
           spacing: 6,
           runSpacing: 6,
-          children: options.entries.map((entry) {
-            final isSelected = selectedValues.contains(entry.key);
-            return FilterChip(
-              label: Text(entry.value),
-              selected: isSelected,
-              selectedColor: AppTheme.primaryColor.withValues(alpha: 0.25),
-              checkmarkColor: AppTheme.primaryColor,
-              backgroundColor: AppTheme.darkCard,
-              labelStyle: TextStyle(
-                fontSize: 11,
-                color: isSelected
-                    ? AppTheme.primaryColor
-                    : AppTheme.textSecondaryDark,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              ),
-              side: BorderSide(
-                color: isSelected
-                    ? AppTheme.primaryColor
-                    : const Color(0xFF334155),
-              ),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
-              onSelected: (bool selected) => onSelected(entry.key, selected),
-            );
-          }).toList(),
+          children: [
+            ...options.entries.map((entry) {
+              final isSelected = selectedValues.contains(entry.key);
+              return FilterChip(
+                label: Text(entry.value),
+                selected: isSelected,
+                selectedColor: AppTheme.primaryColor.withValues(alpha: 0.25),
+                checkmarkColor: AppTheme.primaryColor,
+                backgroundColor: AppTheme.darkCard,
+                labelStyle: TextStyle(
+                  fontSize: 11,
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : AppTheme.textSecondaryDark,
+                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                ),
+                side: BorderSide(
+                  color: isSelected
+                      ? AppTheme.primaryColor
+                      : const Color(0xFF334155),
+                ),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                onSelected: (bool selected) => onSelected(entry.key, selected),
+              );
+            }),
+            ...unknownValues.map((unk) {
+              return FilterChip(
+                avatar: const Icon(Icons.warning_amber_rounded,
+                    size: 14, color: Color(0xFFF59E0B)),
+                label: Text('$unk (نامعتبر)'),
+                selected: true,
+                selectedColor:
+                    const Color(0xFFF59E0B).withValues(alpha: 0.2),
+                checkmarkColor: const Color(0xFFF59E0B),
+                backgroundColor:
+                    const Color(0xFFF59E0B).withValues(alpha: 0.1),
+                labelStyle: const TextStyle(
+                  fontSize: 11,
+                  color: Color(0xFFF59E0B),
+                  fontWeight: FontWeight.bold,
+                ),
+                side: const BorderSide(color: Color(0xFFF59E0B)),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8)),
+                onSelected: (bool selected) => onSelected(unk, selected),
+              );
+            }),
+          ],
         ),
+        if (unknownValues.isNotEmpty) ...[
+          const SizedBox(height: 6),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF59E0B).withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(6),
+              border: Border.all(
+                  color: const Color(0xFFF59E0B).withValues(alpha: 0.4)),
+            ),
+            child: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded,
+                    size: 16, color: Color(0xFFF59E0B)),
+                const SizedBox(width: 6),
+                Expanded(
+                  child: Text(
+                    unknownWarningMessage ??
+                        'مقدار نامعتبر یا قدیمی (${unknownValues.join(', ')}) شناسایی شد و هنگام ذخیره حذف می‌شود. لطفاً مقدار معتبر انتخاب کنید.',
+                    style: const TextStyle(
+                        fontSize: 11, color: Color(0xFFFDE68A)),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -1350,6 +1408,13 @@ class _ExerciseCard extends StatelessWidget {
                         _buildChip(
                           exercise.locations.map((l) => l == 'gym' ? '🏢 باشگاه' : '🏠 خانه').join(' / '),
                           const Color(0xFF64748B),
+                        ),
+
+                      // Levels
+                      if (exercise.levels.isNotEmpty)
+                        _buildChip(
+                          exercise.levels.map((lvl) => _levelOptions[lvl] ?? lvl).join('، '),
+                          const Color(0xFF0284C7),
                         ),
 
                       if (exercise.isCustomized)

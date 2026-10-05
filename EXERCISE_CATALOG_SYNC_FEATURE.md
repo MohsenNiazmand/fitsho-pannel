@@ -47,6 +47,7 @@
 
 ### Phase A1: Data Models & DTO Alignment
 - [x] به‌روزرسانی مدل `AdminExercise` با فیلدهای جدید: `locations`, `disciplines`, `levels`, `contraindications`, `isCustomized`.
+- [x] محدود شدن سطوح مهارت به مبتدی، متوسط و پیشرفته (حذف سطح elite و ادغام آن در advanced طبق فاز B13).
 - [x] اطمینان از محدود شدن تایپ‌های مجاز رشته به همان ۵ مقدار استاندارد سیستم.
 
 ### Phase A2: Form Dialog Multi-select Components
